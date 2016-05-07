@@ -1,14 +1,26 @@
+/*
+	Descripción:
+		PROYECTO II - OPENGL.
+
+		Archivo principal donde se desarrollará el juego Bricks 2D
+		utilizando la librería OpenGL.
+
+	Alumno:
+		Edward Fernández - Carnet: 10-11121.
+		María Lourdes    - Carnet: 
+*/
+
+
 #include <iostream>
 #include <GL\glew.h>
 #include <GL\freeglut.h>
 
-
 using namespace std;
 
-#define DEF_floorGridScale	1.0f
-#define DEF_floorGridXSteps	10.0f
-#define DEF_floorGridZSteps	10.0f
-
+/*
+	Descripción:
+		Permite generar un ejes de coordenadas.
+*/
 void ejesCoordenada(float w) {
 	
 	glLineWidth(w);
@@ -50,36 +62,30 @@ void ejesCoordenada(float w) {
 }
 
 void changeViewport(int w, int h) {
-	glViewport(0,0,w,h);
+	float aspectradio;
+
+	glViewport(0,0,w,h); // Cambia el aspecto de la pantalla.
+
+	// Matriz de proyección.
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();			// Identidad
+
+	aspectradio = (float) w / (float) h;
+
+	if (w<=h)
+		glOrtho(-10,10,-10/aspectradio, 10/aspectradio, 1.0, -1.0);
+	else
+		glOrtho(-10*aspectradio,10*aspectradio,-10, 10, 1.0, -1.0);
+
 }
 
 void render(){
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	GLfloat zExtent, xExtent, xLocal, zLocal;
-    int loopX, loopZ;
-
-	/* Render Grid */
-	glPushMatrix();
-    glColor3f( 0.0f, 0.7f, 0.7f );
-    glBegin( GL_LINES );
-    zExtent = DEF_floorGridScale * DEF_floorGridZSteps;
-    for(loopX = -DEF_floorGridXSteps; loopX <= DEF_floorGridXSteps; loopX++ )
-	{
-	xLocal = DEF_floorGridScale * loopX;
-	glVertex3f( xLocal, -zExtent, 0.0f );
-	glVertex3f( xLocal, zExtent,  0.0f );
-	}
-    xExtent = DEF_floorGridScale * DEF_floorGridXSteps;
-    for(loopZ = -DEF_floorGridZSteps; loopZ <= DEF_floorGridZSteps; loopZ++ )
-	{
-	zLocal = DEF_floorGridScale * loopZ;
-	glVertex3f( -xExtent, zLocal, 0.0f );
-	glVertex3f(  xExtent, zLocal, 0.0f );
-	}
-    glEnd();
-    glPopMatrix();
-
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	
+	//ejesCoordenada(2.0);
 
 	glutSwapBuffers();
 }
