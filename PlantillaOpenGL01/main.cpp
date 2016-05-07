@@ -18,16 +18,20 @@
 
 using namespace std;
 
-/*-------- Estructuras --------*/
+/*--------- Estructuras .--------*/
 typedef struct
 {
 	vector<float> puntos[4];   // Arreglo de vectores que almacenará los puntos del bloque.
-	bool isSpecial;			   // Indica si el bloque es especial o no.
-	bool isActive;			   // Indica si el vector no fue destruido. 
-} Blocks;
+	bool esEspecial;		   // Indica si el bloque al ser destruido creará un bonus.
+	bool esActivo;			   // Indica si el bloque no fue destruido. 
+} Bloque; // Estructura que representará a los diferentes 
+								// bloques que se motrarán en pantalla.
 
-Blocks prueba;
-
+/*------ Variables Globales ------*/
+Bloque prueba;
+Bloque plataforma;				// Plataforma que utilizará el jugador para jugar.
+Bloque listaBloques[7][5];      // Conjunto de todos los bloques "enemigos" que se
+							    // mostrarán en pantalla.
 /*
 	Descripción:
 		Permite generar un ejes de coordenadas.
