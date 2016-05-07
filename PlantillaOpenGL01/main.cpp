@@ -14,8 +14,19 @@
 #include <iostream>
 #include <GL\glew.h>
 #include <GL\freeglut.h>
+#include <vector>
 
 using namespace std;
+
+/*-------- Estructuras --------*/
+typedef struct
+{
+	vector<float> puntos[4];   // Arreglo de vectores que almacenará los puntos del bloque.
+	bool isSpecial;			   // Indica si el bloque es especial o no.
+	bool isActive;			   // Indica si el vector no fue destruido. 
+} Blocks;
+
+Blocks prueba;
 
 /*
 	Descripción:
@@ -86,7 +97,22 @@ void render(){
 	glLoadIdentity();
 	
 	//ejesCoordenada(2.0);
-
+	prueba.puntos[0].push_back(0.0); // Posición x del primer punto. 
+	prueba.puntos[0].push_back(0.0); // Posición y del primer punto.
+	prueba.puntos[1].push_back(0.0); // Posición x del primer punto. 
+	prueba.puntos[1].push_back(0.5); // Posición y del primer punto.
+	prueba.puntos[2].push_back(2.0); // Posición x del primer punto. 
+	prueba.puntos[2].push_back(0.5); // Posición y del primer punto.
+	prueba.puntos[3].push_back(2.0); // Posición x del primer punto. 
+	prueba.puntos[3].push_back(0.0); // Posición y del primer punto.
+	
+	glBegin(GL_LINE_LOOP);
+		glVertex2f(prueba.puntos[0][0], prueba.puntos[0][1]);
+		glVertex2f(prueba.puntos[1][0], prueba.puntos[1][1]);
+		glVertex2f(prueba.puntos[2][0], prueba.puntos[2][1]);
+		glVertex2f(prueba.puntos[3][0], prueba.puntos[3][1]);
+	glEnd();
+		
 	glutSwapBuffers();
 }
 
