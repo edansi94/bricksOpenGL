@@ -13,7 +13,6 @@
 /*
 	TO DO:
 		+ Hacer que los bloques tengan las equinas no tan recta.
-		+ Ubicar la plataforma (usar traslaciones).
 		+ Hacer que se mueva con las flechas.
 */
 
@@ -33,16 +32,22 @@ using namespace std;
 /*--------- Estructuras .--------*/
 typedef struct
 {
+	int  vida;                 // Cuantos golpes puede recibir. 
 	vector<float> puntos[4];   // Arreglo de vectores que almacenará los puntos del bloque.
-	bool esEspecial;		   // Indica si el bloque al ser destruido creará un bonus.
+	bool esEspecial;		   // Indica si el bloque debe golpearse 2 veces para ser destruido.
+	bool tieneBonus;           // Indica si al ser destruido el bloque generará un bonus.
 	bool estaActivo;	       // Indica si el bloque no fue destruido. 
 	bool esJugador;            // Indica si el bloque es la plataforma del jugador.
 } Bloque; // Estructura que representará a los diferentes 
 								// bloques que se motrarán en pantalla.
 
 /*------ Variables Globales ------*/
+int bloqueIJ = 0;					// Permitirá saber que plataforma se generará.
+int numBloquesEsp = 5;              // Cantidad de bloques que pueden ser especiales.
+int numBloquesBon = 6;              // Cantidad de bloques que tendrán bonus.
+
 float trasPared   = -12.0;          // Escalar correspondiente a la traslación en X.
-float movimientoX = 0.0;			// Indicará cuanto y hacia donde se moverá la plataforma.
+float movimientoX =  -1.5;			// Indicará cuanto y hacia donde se moverá la plataforma.
 
 
 Bloque prueba;
@@ -50,18 +55,31 @@ Bloque plataforma;				// Plataforma que utilizará el jugador para jugar.
 Bloque paredLateral;            // Bloque que representará a la pared lateral (izquierda y derecha)  
 								// del juego.
 Bloque paredSuperior;           //  Bloque que representará a la pared superior del juego.
-Bloque listaBloques[7][5];      // Conjunto de todos los bloques "enemigos" que se
+Bloque listaBloques[5][7];      // Conjunto de todos los bloques "enemigos" que se
 							    // mostrarán en pantalla.
 
 /*---------- Funciones ----------*/
+bool randomBool(int numElmentos);
 float lerp(float posInicial, float posFinal, float deltaTime);
 bool colisionPlatPared(Bloque pared, int direccion);
 void teclaPresionada(unsigned char tecla, int x, int y);
 void generarParedLat(Bloque pared);
 void generarParedSup(void);
 void generarPlataforma(void);
+void generarListaBloques(void);
 void compilarJuego(void);
 void ejecutarJuego(void);
+
+/*
+	Descripción:
+		Permite obtener un booleano de forma aleatoria partiendo de una
+		cantidad de elementos.
+*/
+bool randomBool(int numElementos)
+{
+	int temp = rand() % numElementos;
+	return temp == numElementos - 1 ? true : false;
+}
 
 /*
 	Descripción:
@@ -131,17 +149,22 @@ void generarParedLat(void)
 	paredLateral.puntos[3].push_back(0.5); // Posición x del cuarto punto. 
 	paredLateral.puntos[3].push_back(0.0); // Posición y del cuarto punto.
 	
+	paredLateral.tieneBonus = false;
 	paredLateral.esEspecial = false;
 	paredLateral.estaActivo = true;
 	paredLateral.esJugador  = false;
+	paredLateral.vida = -1; // No puede ser destruido.
 
-	// Se construye la plataforma.
+	// Se construye la pared lateral.
 	glNewList(glParedLat, GL_COMPILE);
 		glBegin(GL_LINE_LOOP);
-			glVertex2f(paredLateral.puntos[0][0], paredLateral.puntos[0][1]);
-			glVertex2f(paredLateral.puntos[1][0], paredLateral.puntos[1][1]);
-			glVertex2f(paredLateral.puntos[2][0], paredLateral.puntos[2][1]);
-			glVertex2f(paredLateral.puntos[3][0], paredLateral.puntos[3][1]);
+			glPushMatrix();
+				glColor3f(0.0, 1.0, 0.0);
+				glVertex2f(paredLateral.puntos[0][0], paredLateral.puntos[0][1]);
+				glVertex2f(paredLateral.puntos[1][0], paredLateral.puntos[1][1]);
+				glVertex2f(paredLateral.puntos[2][0], paredLateral.puntos[2][1]);
+				glVertex2f(paredLateral.puntos[3][0], paredLateral.puntos[3][1]);
+			glPopMatrix();
 		glEnd();
 	glEndList();
 
@@ -165,17 +188,22 @@ void generarParedSup(void)
 	paredSuperior.puntos[3].push_back(24.5);// Posición x del cuarto punto. 
 	paredSuperior.puntos[3].push_back(0.0); // Posición y del cuarto punto.
 	
+	paredSuperior.tieneBonus = false;
 	paredSuperior.esEspecial = false;
 	paredSuperior.estaActivo = true;
 	paredSuperior.esJugador  = false;
+	paredSuperior.vida = -1;
 
-	// Se construye la plataforma.
+	// Se construye la pared superior.
 	glNewList(glParedSup, GL_COMPILE);
 		glBegin(GL_LINE_LOOP);
-			glVertex2f(paredSuperior.puntos[0][0], paredSuperior.puntos[0][1]);
-			glVertex2f(paredSuperior.puntos[1][0], paredSuperior.puntos[1][1]);
-			glVertex2f(paredSuperior.puntos[2][0], paredSuperior.puntos[2][1]);
-			glVertex2f(paredSuperior.puntos[3][0], paredSuperior.puntos[3][1]);
+			glPushMatrix();
+				glColor3f(0.0, 1.0, 0.0);
+				glVertex2f(paredSuperior.puntos[0][0], paredSuperior.puntos[0][1]);
+				glVertex2f(paredSuperior.puntos[1][0], paredSuperior.puntos[1][1]);
+				glVertex2f(paredSuperior.puntos[2][0], paredSuperior.puntos[2][1]);
+				glVertex2f(paredSuperior.puntos[3][0], paredSuperior.puntos[3][1]);
+			glPopMatrix();
 		glEnd();
 	glEndList();
 
@@ -200,19 +228,86 @@ void generarPlataforma(void)
 	plataforma.puntos[3].push_back(3.0); // Posición x del cuarto punto. 
 	plataforma.puntos[3].push_back(0.0); // Posición y del cuarto punto.
 	
+	plataforma.tieneBonus = false;
 	plataforma.esEspecial = false;
 	plataforma.estaActivo = true;
 	plataforma.esJugador  = true;
+	plataforma.vida = 1;
 
 	// Se construye la plataforma.
 	glNewList(glPlataforma, GL_COMPILE);
 		glBegin(GL_LINE_LOOP);
-			glVertex2f(plataforma.puntos[0][0], plataforma.puntos[0][1]);
-			glVertex2f(plataforma.puntos[1][0], plataforma.puntos[1][1]);
-			glVertex2f(plataforma.puntos[2][0], plataforma.puntos[2][1]);
-			glVertex2f(plataforma.puntos[3][0], plataforma.puntos[3][1]);
+			glPushMatrix();
+				glColor3f(0.0, 0.0, 1.0);
+				glVertex2f(plataforma.puntos[0][0], plataforma.puntos[0][1]);
+				glVertex2f(plataforma.puntos[1][0], plataforma.puntos[1][1]);
+				glVertex2f(plataforma.puntos[2][0], plataforma.puntos[2][1]);
+				glVertex2f(plataforma.puntos[3][0], plataforma.puntos[3][1]);
+			glPopMatrix();
 		glEnd();
 	glEndList();
+}
+
+/* 
+	Permite generar los bloques "enemigos".
+*/
+void generarListaBloques(void)
+{
+	float tempPosicionX = trasPared + 2.25;  // Almacenará la posición actual.
+										    // tempPosicion = posicionParedIzq + anchoPared + separación
+	float tempPosicionY = 14;
+
+	for(int i= 0; i < 5; i++)
+	{
+		for (int j = 0; j < 7; j++)
+		{
+			bloqueIJ = 10 + 10*i + j;
+			listaBloques[i][j].puntos[0].push_back(tempPosicionX); // Posición x del primer punto. 
+			listaBloques[i][j].puntos[0].push_back(tempPosicionY); // Posición x del primer punto. 
+			listaBloques[i][j].puntos[1].push_back(tempPosicionX); // Posición x del segundo punto. 
+			listaBloques[i][j].puntos[1].push_back(tempPosicionY - 0.6);// Posición y del segundo punto.
+			listaBloques[i][j].puntos[2].push_back(tempPosicionX + 1.9); // Posición x del tercer punto. 
+			listaBloques[i][j].puntos[2].push_back(tempPosicionY - 0.6);// Posición y del tercer punto.
+			listaBloques[i][j].puntos[3].push_back(tempPosicionX + 1.9); // Posición x del cuarto punto. 
+			listaBloques[i][j].puntos[3].push_back(tempPosicionY); // Posición y del cuarto punto.
+	
+			// Se determina si el bloque tendrá bonus.
+			if (numBloquesBon > 0){
+				listaBloques[i][j].tieneBonus = randomBool(6);
+				numBloquesBon = listaBloques[i][j].tieneBonus ? numBloquesBon - 1 :  numBloquesBon;
+			}
+
+			// Se determina si el bloque será especial.
+			if (numBloquesEsp > 0){
+				listaBloques[i][j].esEspecial = randomBool(5);
+				numBloquesEsp = listaBloques[i][j].esEspecial ? numBloquesEsp - 1 :  numBloquesEsp;
+			}
+
+			listaBloques[i][j].estaActivo = true;
+			listaBloques[i][j].esJugador  = false;
+	
+			tempPosicionX += 3;
+			
+			// Se construye el bloque enemigo.
+			glNewList(bloqueIJ, GL_COMPILE);
+				glBegin(GL_LINE_LOOP);
+					glPushMatrix();
+						if (listaBloques[i][j].esEspecial)
+							glColor3f(1.0, 1.0, 0.0);
+						else
+							glColor3f(1.0, 0.0, 0.0);
+						glVertex2f(listaBloques[i][j].puntos[0][0], listaBloques[i][j].puntos[0][1]);
+						glVertex2f(listaBloques[i][j].puntos[1][0], listaBloques[i][j].puntos[1][1]);
+						glVertex2f(listaBloques[i][j].puntos[2][0], listaBloques[i][j].puntos[2][1]);
+						glVertex2f(listaBloques[i][j].puntos[3][0], listaBloques[i][j].puntos[3][1]);
+					glPopMatrix();
+				glEnd();
+			glEndList();
+		}
+
+		tempPosicionX  = trasPared + 2.25;
+		tempPosicionY -= 1.3;
+	}
 }
 
 
@@ -226,6 +321,7 @@ void compilarJuego(void)
 	generarParedLat();
 	generarParedSup();
 	generarPlataforma();
+	generarListaBloques();
 }
 
 /*
@@ -237,6 +333,12 @@ void ejecutarJuego(void)
 {
 	// Transformación para que se pueda ver mejor en la pantalla.
 	glTranslatef(0.0, -7.0, 0.0);
+
+	
+	glPushMatrix();
+		glTranslatef(movimientoX, 0, 0);
+		glCallList(glPlataforma);  // Se muestra la plataforma.
+	glPopMatrix();
 
 	// Creación de la pared izquierda.
 	glPushMatrix();
@@ -256,10 +358,16 @@ void ejecutarJuego(void)
 	glPopMatrix();
 
 	glPushMatrix();
+		bloqueIJ = 10;
+		for (int i = 0; i < 5; i++)
+		{
+			for(int j = 0; j < 7; j++)
+			{
+				bloqueIJ = 10 + 10*i + j;
+				glCallList(bloqueIJ);
+			}
+		}
 	glPopMatrix();
-
-	glTranslatef(movimientoX, 0, 0);
-	glCallList(glPlataforma);  // Se muestra la plataforma.
 }
 
 /*
