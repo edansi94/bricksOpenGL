@@ -19,6 +19,7 @@
 #include <iostream>
 #include <GL\glew.h>
 #include <GL\freeglut.h>
+#include <ctime>
 #include <vector>
 
 using namespace std;
@@ -253,6 +254,7 @@ void generarPlataforma(void)
 */
 void generarListaBloques(void)
 {
+	srand(time(0));
 	float tempPosicionX = trasPared + 2.25;  // Almacenará la posición actual.
 										    // tempPosicion = posicionParedIzq + anchoPared + separación
 	float tempPosicionY = 14;
