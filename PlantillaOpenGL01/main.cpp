@@ -41,7 +41,9 @@ typedef struct
 								// bloques que se motrarán en pantalla.
 
 /*------ Variables Globales ------*/
+float trasPared   = -12.0;          // Escalar correspondiente a la traslación en X.
 float movimientoX = 0.0;			// Indicará cuanto y hacia donde se moverá la plataforma.
+
 
 Bloque prueba;
 Bloque plataforma;				// Plataforma que utilizará el jugador para jugar.
@@ -53,8 +55,9 @@ Bloque listaBloques[7][5];      // Conjunto de todos los bloques "enemigos" que 
 
 /*---------- Funciones ----------*/
 float lerp(float posInicial, float posFinal, float deltaTime);
+bool colisionPlatPared(Bloque pared, int direccion);
 void teclaPresionada(unsigned char tecla, int x, int y);
-void generarParedLat(void);
+void generarParedLat(Bloque pared);
 void generarParedSup(void);
 void generarPlataforma(void);
 void compilarJuego(void);
@@ -72,6 +75,20 @@ float lerp(float posInicial, float posFinal, float deltaTime)
 
 /*
 	Descripción:
+		Permite saber si la plataforma está chocando con una pared.
+*/
+bool colisionPlatPared(Bloque pared, int direccion)
+{
+	if (direccion == -1 && plataforma.puntos[0][0] + movimientoX <= pared.puntos[3][0] + trasPared)
+		return true;
+	if (direccion ==  1 && plataforma.puntos[3][0] + movimientoX >= pared.puntos[0][0] - trasPared)
+		return true;
+	
+	return false;
+}
+
+/*
+	Descripción:
 		Permite capturar que tecla es presionada y de esta forma
 		se podrá encadenar la acción correspondiente.
 */
@@ -81,11 +98,14 @@ void teclaPresionada(unsigned char tecla, int x, int y)
 	{
 		case 'a':
 		case 'A':
-			movimientoX = lerp(movimientoX, movimientoX - 1, 0.5);
+			if (!colisionPlatPared(paredLateral, -1)){
+				movimientoX = lerp(movimientoX, movimientoX - 1, 0.5);
+			}
 			break;
 		case 'd':
 		case 'D':
-			movimientoX = lerp(movimientoX, movimientoX + 1, 0.5);
+			if (!colisionPlatPared(paredLateral, 1))
+				movimientoX = lerp(movimientoX, movimientoX + 1, 0.5);
 			break;
 	}
 
@@ -220,18 +240,18 @@ void ejecutarJuego(void)
 
 	// Creación de la pared izquierda.
 	glPushMatrix();
-		glTranslatef(-12, 0.0, 0.0);
+		glTranslatef(trasPared, 0.0, 0.0);
 		glCallList(glParedLat);
 	glPopMatrix();
 
 	glPushMatrix();
-		glTranslatef(-12.0, 16.0, 0.0);
+		glTranslatef(trasPared, 16.0, 0.0);
 		glCallList(glParedSup);
 	glPopMatrix();
 
 	// Creación de la pared derecha.
 	glPushMatrix();
-		glTranslatef(12, 0.0, 0.0);
+		glTranslatef(-trasPared, 0.0, 0.0);
 		glCallList(glParedLat);
 	glPopMatrix();
 
