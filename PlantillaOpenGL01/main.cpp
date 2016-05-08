@@ -16,16 +16,16 @@
 		+ Hacer que se mueva con las flechas.
 */
 
+#include <ctime>          // Librería para importar la variable time.
+#include <vector>         // Libreria que me permite crear vectores.
 #include <iostream>
 #include <GL\glew.h>
 #include <GL\freeglut.h>
-#include <ctime>
-#include <vector>
 
 using namespace std;
 
 /*--------- Definiciones --------*/
-// Indices de la lista.
+// Indices de la lista que almacenará los comandos para la creación de los elementos del juego.
 #define glPlataforma 1        
 #define glParedLat   2
 #define glParedSup   3
@@ -34,35 +34,31 @@ using namespace std;
 typedef struct
 {
 	int  vida;                 // Cuantos golpes puede recibir. 
-	vector<float> puntos[4];   // Arreglo de vectores que almacenará los puntos del bloque.
+
 	bool esEspecial;		   // Indica si el bloque debe golpearse 2 veces para ser destruido.
 	bool tieneBonus;           // Indica si al ser destruido el bloque generará un bonus.
 	bool estaActivo;	       // Indica si el bloque no fue destruido. 
 	bool esJugador;            // Indica si el bloque es la plataforma del jugador.
-} Bloque; // Estructura que representará a los diferentes 
-								// bloques que se motrarán en pantalla.
+
+	vector<float> puntos[4];   // Arreglo de vectores que almacenará los puntos del bloque.
+} Bloque; // Estructura que representará a los diferentes bloques que se motrarán en pantalla.
 
 /*------ Variables Globales ------*/
-int bloqueIJ = 0;					// Permitirá saber que plataforma se generará.
-int numBloquesEsp = 5;              // Cantidad de bloques que pueden ser especiales.
-int numBloquesBon = 6;              // Cantidad de bloques que tendrán bonus.
+int bloqueIJ = 0;			   // Permitirá saber que bloque "enemigo" se generará.
+int numBloquesEsp = 5;         // Cantidad de bloques que pueden ser especiales.
+int numBloquesBon = 6;         // Cantidad de bloques que tendrán bonus.
 
-float trasPared   = -12.0;          // Escalar correspondiente a la traslación en X.
-float movimientoX =  -1.5;			// Indicará cuanto y hacia donde se moverá la plataforma.
+float trasPared   = -12.0;     // Escalar correspondiente a la traslación en X de las paredes.
+float movimientoX =  -1.5;	   // Indicará cuanto y hacia donde se moverá la plataforma.
 
-
-Bloque prueba;
-Bloque plataforma;				// Plataforma que utilizará el jugador para jugar.
-Bloque paredLateral;            // Bloque que representará a la pared lateral (izquierda y derecha)  
-								// del juego.
-Bloque paredSuperior;           //  Bloque que representará a la pared superior del juego.
-Bloque listaBloques[5][7];      // Conjunto de todos los bloques "enemigos" que se
-							    // mostrarán en pantalla.
+Bloque plataforma;			   // Plataforma que utilizará el jugador para jugar.
+Bloque paredLateral;           // Bloque que representará a la pared lateral (izquierda y derecha)  
+							   // del juego.
+Bloque paredSuperior;          //  Bloque que representará a la pared superior del juego.
+Bloque listaBloques[5][7];     // Conjunto de todos los bloques "enemigos" que se
+							   // mostrarán en pantalla.
 
 /*---------- Funciones ----------*/
-bool randomBool(int numElmentos);
-float lerp(float posInicial, float posFinal, float deltaTime);
-bool colisionPlatPared(Bloque pared, int direccion);
 void teclaPresionada(unsigned char tecla, int x, int y);
 void generarParedLat(Bloque pared);
 void generarParedSup(void);
@@ -71,10 +67,16 @@ void generarListaBloques(void);
 void compilarJuego(void);
 void ejecutarJuego(void);
 
+bool randomBool(int numElmentos);
+bool colisionPlatPared(Bloque pared, int direccion);
+
+float lerp(float posInicial, float posFinal, float deltaTime);
+
+/*--------------------------------*/
 /*
 	Descripción:
-		Permite obtener un booleano de forma aleatoria partiendo de una
-		cantidad de elementos.
+		Permite obtener un booleano de forma aleatoria partiendo de un
+		número de elementos.
 */
 bool randomBool(int numElementos)
 {
@@ -98,8 +100,11 @@ float lerp(float posInicial, float posFinal, float deltaTime)
 */
 bool colisionPlatPared(Bloque pared, int direccion)
 {
+	// ¿Está chocando con la pared izquierda?
 	if (direccion == -1 && plataforma.puntos[0][0] + movimientoX <= pared.puntos[3][0] + trasPared)
 		return true;
+	
+	// ¿Está chocando con la pared derecha?
 	if (direccion ==  1 && plataforma.puntos[3][0] + movimientoX >= pared.puntos[0][0] - trasPared)
 		return true;
 	
@@ -141,14 +146,14 @@ void generarParedLat(void)
 {
 	// Se definen los puntos que generan a las paredes laterales.
 	// ( Cada vez que le hace push a un vector se le agrega una nueva coordenada.)
-	paredLateral.puntos[0].push_back(0.0); // Posición x del primer punto. 
-	paredLateral.puntos[0].push_back(0.0); // Posición y del primer punto.
-	paredLateral.puntos[1].push_back(0.0); // Posición x del segundo punto. 
-	paredLateral.puntos[1].push_back(16.5);// Posición y del segundo punto.
-	paredLateral.puntos[2].push_back(0.5); // Posición x del tercer punto. 
-	paredLateral.puntos[2].push_back(16.5);// Posición y del tercer punto.
-	paredLateral.puntos[3].push_back(0.5); // Posición x del cuarto punto. 
-	paredLateral.puntos[3].push_back(0.0); // Posición y del cuarto punto.
+	paredLateral.puntos[0].push_back( 0.0); // Posición x del primer punto. 
+	paredLateral.puntos[0].push_back( 0.0); // Posición y del primer punto.
+	paredLateral.puntos[1].push_back( 0.0); // Posición x del segundo punto. 
+	paredLateral.puntos[1].push_back(16.5); // Posición y del segundo punto.
+	paredLateral.puntos[2].push_back( 0.5); // Posición x del tercer punto. 
+	paredLateral.puntos[2].push_back(16.5); // Posición y del tercer punto.
+	paredLateral.puntos[3].push_back( 0.5); // Posición x del cuarto punto. 
+	paredLateral.puntos[3].push_back( 0.0); // Posición y del cuarto punto.
 	
 	paredLateral.tieneBonus = false;
 	paredLateral.esEspecial = false;
@@ -180,20 +185,20 @@ void generarParedSup(void)
 {
 	// Se definen los puntos que generan la pared superior.
 	// ( Cada vez que le hace push a un vector se le agrega una nueva coordenada.)
-	paredSuperior.puntos[0].push_back(0.0); // Posición x del primer punto. 
-	paredSuperior.puntos[0].push_back(0.0); // Posición y del primer punto.
-	paredSuperior.puntos[1].push_back(0.0); // Posición x del segundo punto. 
-	paredSuperior.puntos[1].push_back(0.5); // Posición y del segundo punto.
-	paredSuperior.puntos[2].push_back(24.5);// Posición x del tercer punto. 
-	paredSuperior.puntos[2].push_back(0.5); // Posición y del tercer punto.
-	paredSuperior.puntos[3].push_back(24.5);// Posición x del cuarto punto. 
-	paredSuperior.puntos[3].push_back(0.0); // Posición y del cuarto punto.
+	paredSuperior.puntos[0].push_back( 0.0); // Posición x del primer punto. 
+	paredSuperior.puntos[0].push_back( 0.0); // Posición y del primer punto.
+	paredSuperior.puntos[1].push_back( 0.0); // Posición x del segundo punto. 
+	paredSuperior.puntos[1].push_back( 0.5); // Posición y del segundo punto.
+	paredSuperior.puntos[2].push_back(24.5); // Posición x del tercer punto. 
+	paredSuperior.puntos[2].push_back( 0.5); // Posición y del tercer punto.
+	paredSuperior.puntos[3].push_back(24.5); // Posición x del cuarto punto. 
+	paredSuperior.puntos[3].push_back( 0.0); // Posición y del cuarto punto.
 	
 	paredSuperior.tieneBonus = false;
 	paredSuperior.esEspecial = false;
 	paredSuperior.estaActivo = true;
 	paredSuperior.esJugador  = false;
-	paredSuperior.vida = -1;
+	paredSuperior.vida = -1;  // No puede ser destruido.
 
 	// Se construye la pared superior.
 	glNewList(glParedSup, GL_COMPILE);
@@ -220,14 +225,14 @@ void generarPlataforma(void)
 {
 	// Se definen los puntos que generan a la plataforma.
 	// ( Cada vez que le hace push a un vector se le agrega una nueva coordenada.)
-	plataforma.puntos[0].push_back(0.0); // Posición x del primer punto. 
-	plataforma.puntos[0].push_back(0.0); // Posición y del primer punto.
-	plataforma.puntos[1].push_back(0.0); // Posición x del segundo punto. 
-	plataforma.puntos[1].push_back(0.25);// Posición y del segundo punto.
-	plataforma.puntos[2].push_back(3.0); // Posición x del tercer punto. 
-	plataforma.puntos[2].push_back(0.25);// Posición y del tercer punto.
-	plataforma.puntos[3].push_back(3.0); // Posición x del cuarto punto. 
-	plataforma.puntos[3].push_back(0.0); // Posición y del cuarto punto.
+	plataforma.puntos[0].push_back(0.0);  // Posición x del primer punto. 
+	plataforma.puntos[0].push_back(0.0);  // Posición y del primer punto.
+	plataforma.puntos[1].push_back(0.0);  // Posición x del segundo punto. 
+	plataforma.puntos[1].push_back(0.25); // Posición y del segundo punto.
+	plataforma.puntos[2].push_back(3.0);  // Posición x del tercer punto. 
+	plataforma.puntos[2].push_back(0.25); // Posición y del tercer punto.
+	plataforma.puntos[3].push_back(3.0);  // Posición x del cuarto punto. 
+	plataforma.puntos[3].push_back(0.0);  // Posición y del cuarto punto.
 	
 	plataforma.tieneBonus = false;
 	plataforma.esEspecial = false;
@@ -250,28 +255,29 @@ void generarPlataforma(void)
 }
 
 /* 
-	Permite generar los bloques "enemigos".
+	Descripción:
+		Permite generar los bloques "enemigos".
 */
 void generarListaBloques(void)
 {
-	srand(time(0));
-	float tempPosicionX = trasPared + 2.25;  // Almacenará la posición actual.
-										    // tempPosicion = posicionParedIzq + anchoPared + separación
-	float tempPosicionY = 14;
+	srand(time(0));  // Para que se puedan generar números aleatorios.
+	float tempPosicionX = trasPared + 2.25;  // Almacenará la posición actual X donde se generará el bloque.
+										     // tempPosicion = posicionParedIzq + anchoPared + separación
+	float tempPosicionY = 14;                // Almacenará la posición actual Y donde se generará el bloque.
 
 	for(int i= 0; i < 5; i++)
 	{
 		for (int j = 0; j < 7; j++)
 		{
 			bloqueIJ = 10 + 10*i + j;
-			listaBloques[i][j].puntos[0].push_back(tempPosicionX); // Posición x del primer punto. 
-			listaBloques[i][j].puntos[0].push_back(tempPosicionY); // Posición x del primer punto. 
-			listaBloques[i][j].puntos[1].push_back(tempPosicionX); // Posición x del segundo punto. 
-			listaBloques[i][j].puntos[1].push_back(tempPosicionY - 0.6);// Posición y del segundo punto.
+			listaBloques[i][j].puntos[0].push_back(tempPosicionX);       // Posición x del primer punto. 
+			listaBloques[i][j].puntos[0].push_back(tempPosicionY);       // Posición x del primer punto. 
+			listaBloques[i][j].puntos[1].push_back(tempPosicionX);       // Posición x del segundo punto. 
+			listaBloques[i][j].puntos[1].push_back(tempPosicionY - 0.6); // Posición y del segundo punto.
 			listaBloques[i][j].puntos[2].push_back(tempPosicionX + 1.9); // Posición x del tercer punto. 
-			listaBloques[i][j].puntos[2].push_back(tempPosicionY - 0.6);// Posición y del tercer punto.
+			listaBloques[i][j].puntos[2].push_back(tempPosicionY - 0.6); // Posición y del tercer punto.
 			listaBloques[i][j].puntos[3].push_back(tempPosicionX + 1.9); // Posición x del cuarto punto. 
-			listaBloques[i][j].puntos[3].push_back(tempPosicionY); // Posición y del cuarto punto.
+			listaBloques[i][j].puntos[3].push_back(tempPosicionY);       // Posición y del cuarto punto.
 	
 			// Se determina si el bloque tendrá bonus.
 			if (numBloquesBon > 0){
@@ -336,18 +342,21 @@ void ejecutarJuego(void)
 	// Transformación para que se pueda ver mejor en la pantalla.
 	glTranslatef(0.0, -7.0, 0.0);
 
-	
+	/*-------------------- Plataforma --------------------*/
 	glPushMatrix();
 		glTranslatef(movimientoX, 0, 0);
 		glCallList(glPlataforma);  // Se muestra la plataforma.
 	glPopMatrix();
 
+		
+	/*-------------------- Límites del juego --------------------*/
 	// Creación de la pared izquierda.
 	glPushMatrix();
 		glTranslatef(trasPared, 0.0, 0.0);
 		glCallList(glParedLat);
 	glPopMatrix();
 
+	// Creación de la pared superior.
 	glPushMatrix();
 		glTranslatef(trasPared, 16.0, 0.0);
 		glCallList(glParedSup);
@@ -359,6 +368,7 @@ void ejecutarJuego(void)
 		glCallList(glParedLat);
 	glPopMatrix();
 
+	/*-------------------- Lista de bloques "enemigos" --------------------*/
 	glPushMatrix();
 		bloqueIJ = 10;
 		for (int i = 0; i < 5; i++)
