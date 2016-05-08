@@ -14,6 +14,7 @@
 	TO DO:
 		+ Hacer que los bloques tengan las equinas no tan recta.
 		+ Ubicar la plataforma (usar traslaciones).
+		+ Hacer que se mueva con las flechas.
 */
 
 #include <iostream>
@@ -38,15 +39,59 @@ typedef struct
 								// bloques que se motrarán en pantalla.
 
 /*------ Variables Globales ------*/
+float movimientoX = 0.0;			// Indicará cuanto y hacia donde se moverá la plataforma.
+
 Bloque prueba;
 Bloque plataforma;				// Plataforma que utilizará el jugador para jugar.
 Bloque listaBloques[7][5];      // Conjunto de todos los bloques "enemigos" que se
 							    // mostrarán en pantalla.
 
 /*---------- Funciones ----------*/
+float lerp(float posInicial, float posFinal, float deltaTime);
+void teclaPresionada(unsigned char tecla, int x, int y);
 void generarPlataforma(void);
 void compilarJuego(void);
-void inicializarJuego(void);
+void ejecutarJuego(void);
+
+/*
+	Descripción:
+		Permite realizar la interpolación lineal entre dos escalares dados en base al
+		tiempo de ejecución del programa.
+*/
+float lerp(float posInicial, float posFinal, float deltaTime)
+{
+	return( posInicial + deltaTime*(posFinal - posInicial));
+}
+
+/*
+	Descripción:
+		Permite capturar que tecla es presionada y de esta forma
+		se podrá encadenar la acción correspondiente.
+*/
+void teclaPresionada(unsigned char tecla, int x, int y)
+{
+	switch (tecla)
+	{
+		case 'a':
+		case 'A':
+			movimientoX = lerp(movimientoX, movimientoX - 1, 0.5);
+			break;
+		case 'd':
+		case 'D':
+			movimientoX = lerp(movimientoX, movimientoX + 1, 0.5);
+			break;
+	}
+
+	// Para realizar render al momento que se encadene la acción.
+	glutPostRedisplay();
+}
+
+/*
+	Descripción:
+		Permite almacenar los comandos necesarios para la generación
+		de la plataforma.
+*/
+
 
 /*
 	Descripción:
@@ -97,8 +142,9 @@ void compilarJuego(void)
 		Permite ejecutar los comandos que se utilizarán para crear el 
 		juego.
 */
-void inicializarJuego(void)
+void ejecutarJuego(void)
 {
+	glTranslatef(movimientoX, 0, 0);
 	glCallList(glPlataforma);  // Se muestra la plataforma.
 }
 
@@ -170,9 +216,12 @@ void render(){
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	
+	// Permite saber que tecla es seleccionada.
+	glutKeyboardFunc(teclaPresionada);
+
 	//ejesCoordenada(2.0);
 	compilarJuego();
-	inicializarJuego();
+	ejecutarJuego();
 
 	glutSwapBuffers();
 }
