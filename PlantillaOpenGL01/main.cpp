@@ -27,6 +27,8 @@ using namespace std;
 /*--------- Definiciones --------*/
 // Indices de la lista.
 #define glPlataforma 1        
+#define glParedLat   2
+#define glParedSup   3
 
 /*--------- Estructuras .--------*/
 typedef struct
@@ -43,12 +45,17 @@ float movimientoX = 0.0;			// Indicará cuanto y hacia donde se moverá la platafo
 
 Bloque prueba;
 Bloque plataforma;				// Plataforma que utilizará el jugador para jugar.
+Bloque paredLateral;            // Bloque que representará a la pared lateral (izquierda y derecha)  
+								// del juego.
+Bloque paredSuperior;           //  Bloque que representará a la pared superior del juego.
 Bloque listaBloques[7][5];      // Conjunto de todos los bloques "enemigos" que se
 							    // mostrarán en pantalla.
 
 /*---------- Funciones ----------*/
 float lerp(float posInicial, float posFinal, float deltaTime);
 void teclaPresionada(unsigned char tecla, int x, int y);
+void generarParedLat(void);
+void generarParedSup(void);
 void generarPlataforma(void);
 void compilarJuego(void);
 void ejecutarJuego(void);
@@ -89,8 +96,70 @@ void teclaPresionada(unsigned char tecla, int x, int y)
 /*
 	Descripción:
 		Permite almacenar los comandos necesarios para la generación
-		de la plataforma.
+		de la pared izquierda y derecha.
 */
+void generarParedLat(void)
+{
+	// Se definen los puntos que generan a las paredes laterales.
+	// ( Cada vez que le hace push a un vector se le agrega una nueva coordenada.)
+	paredLateral.puntos[0].push_back(0.0); // Posición x del primer punto. 
+	paredLateral.puntos[0].push_back(0.0); // Posición y del primer punto.
+	paredLateral.puntos[1].push_back(0.0); // Posición x del segundo punto. 
+	paredLateral.puntos[1].push_back(16.5);// Posición y del segundo punto.
+	paredLateral.puntos[2].push_back(0.5); // Posición x del tercer punto. 
+	paredLateral.puntos[2].push_back(16.5);// Posición y del tercer punto.
+	paredLateral.puntos[3].push_back(0.5); // Posición x del cuarto punto. 
+	paredLateral.puntos[3].push_back(0.0); // Posición y del cuarto punto.
+	
+	paredLateral.esEspecial = false;
+	paredLateral.estaActivo = true;
+	paredLateral.esJugador  = false;
+
+	// Se construye la plataforma.
+	glNewList(glParedLat, GL_COMPILE);
+		glBegin(GL_LINE_LOOP);
+			glVertex2f(paredLateral.puntos[0][0], paredLateral.puntos[0][1]);
+			glVertex2f(paredLateral.puntos[1][0], paredLateral.puntos[1][1]);
+			glVertex2f(paredLateral.puntos[2][0], paredLateral.puntos[2][1]);
+			glVertex2f(paredLateral.puntos[3][0], paredLateral.puntos[3][1]);
+		glEnd();
+	glEndList();
+
+}
+
+/*
+	Descripción:
+		Permite almacenar los comandos necesarios para la generación
+		de la pared superior.
+*/
+void generarParedSup(void)
+{
+	// Se definen los puntos que generan la pared superior.
+	// ( Cada vez que le hace push a un vector se le agrega una nueva coordenada.)
+	paredSuperior.puntos[0].push_back(0.0); // Posición x del primer punto. 
+	paredSuperior.puntos[0].push_back(0.0); // Posición y del primer punto.
+	paredSuperior.puntos[1].push_back(0.0); // Posición x del segundo punto. 
+	paredSuperior.puntos[1].push_back(0.5); // Posición y del segundo punto.
+	paredSuperior.puntos[2].push_back(24.5);// Posición x del tercer punto. 
+	paredSuperior.puntos[2].push_back(0.5); // Posición y del tercer punto.
+	paredSuperior.puntos[3].push_back(24.5);// Posición x del cuarto punto. 
+	paredSuperior.puntos[3].push_back(0.0); // Posición y del cuarto punto.
+	
+	paredSuperior.esEspecial = false;
+	paredSuperior.estaActivo = true;
+	paredSuperior.esJugador  = false;
+
+	// Se construye la plataforma.
+	glNewList(glParedSup, GL_COMPILE);
+		glBegin(GL_LINE_LOOP);
+			glVertex2f(paredSuperior.puntos[0][0], paredSuperior.puntos[0][1]);
+			glVertex2f(paredSuperior.puntos[1][0], paredSuperior.puntos[1][1]);
+			glVertex2f(paredSuperior.puntos[2][0], paredSuperior.puntos[2][1]);
+			glVertex2f(paredSuperior.puntos[3][0], paredSuperior.puntos[3][1]);
+		glEnd();
+	glEndList();
+
+}
 
 
 /*
@@ -134,6 +203,8 @@ void generarPlataforma(void)
 */
 void compilarJuego(void)
 {
+	generarParedLat();
+	generarParedSup();
 	generarPlataforma();
 }
 
@@ -144,6 +215,29 @@ void compilarJuego(void)
 */
 void ejecutarJuego(void)
 {
+	// Transformación para que se pueda ver mejor en la pantalla.
+	glTranslatef(0.0, -7.0, 0.0);
+
+	// Creación de la pared izquierda.
+	glPushMatrix();
+		glTranslatef(-12, 0.0, 0.0);
+		glCallList(glParedLat);
+	glPopMatrix();
+
+	glPushMatrix();
+		glTranslatef(-12.0, 16.0, 0.0);
+		glCallList(glParedSup);
+	glPopMatrix();
+
+	// Creación de la pared derecha.
+	glPushMatrix();
+		glTranslatef(12, 0.0, 0.0);
+		glCallList(glParedLat);
+	glPopMatrix();
+
+	glPushMatrix();
+	glPopMatrix();
+
 	glTranslatef(movimientoX, 0, 0);
 	glCallList(glPlataforma);  // Se muestra la plataforma.
 }
