@@ -194,10 +194,10 @@ void generarPlataforma(void)
 	plataforma.puntos[0].push_back(0.0); // Posición x del primer punto. 
 	plataforma.puntos[0].push_back(0.0); // Posición y del primer punto.
 	plataforma.puntos[1].push_back(0.0); // Posición x del segundo punto. 
-	plataforma.puntos[1].push_back(0.5); // Posición y del segundo punto.
-	plataforma.puntos[2].push_back(2.0); // Posición x del tercer punto. 
-	plataforma.puntos[2].push_back(0.5); // Posición y del tercer punto.
-	plataforma.puntos[3].push_back(2.0); // Posición x del cuarto punto. 
+	plataforma.puntos[1].push_back(0.25);// Posición y del segundo punto.
+	plataforma.puntos[2].push_back(3.0); // Posición x del tercer punto. 
+	plataforma.puntos[2].push_back(0.25);// Posición y del tercer punto.
+	plataforma.puntos[3].push_back(3.0); // Posición x del cuarto punto. 
 	plataforma.puntos[3].push_back(0.0); // Posición y del cuarto punto.
 	
 	plataforma.esEspecial = false;
