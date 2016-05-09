@@ -60,6 +60,7 @@ Bloque listaBloques[5][7];     // Conjunto de todos los bloques "enemigos" que s
 
 /*---------- Funciones ----------*/
 void teclaPresionada(unsigned char tecla, int x, int y);
+void flechaPresionada(int flecha, int x, int y);
 void generarParedLat(Bloque pared);
 void generarParedSup(void);
 void generarPlataforma(void);
@@ -122,12 +123,34 @@ void teclaPresionada(unsigned char tecla, int x, int y)
 	{
 		case 'a':
 		case 'A':
-			if (!colisionPlatPared(paredLateral, -1)){
+			if (!colisionPlatPared(paredLateral, -1))
 				movimientoX = lerp(movimientoX, movimientoX - 1, 0.5);
-			}
 			break;
 		case 'd':
 		case 'D':
+			if (!colisionPlatPared(paredLateral, 1))
+				movimientoX = lerp(movimientoX, movimientoX + 1, 0.5);
+			break;
+	}
+
+	// Para realizar render al momento que se encadene la acción.
+	glutPostRedisplay();
+}
+
+/*
+	Descripción:
+		Permite capturar que flecha es presionada y de esta forma
+		se podrá encadenar la acción correspondiente.
+*/
+void flechaPresionada(int flecha, int x, int y)
+{
+	switch (flecha)
+	{
+		case GLUT_KEY_LEFT:    // Flecha izquierda.	
+			if (!colisionPlatPared(paredLateral, -1))
+				movimientoX = lerp(movimientoX, movimientoX - 1, 0.5);
+				break;
+		case GLUT_KEY_RIGHT:   // Flecha derecha.
 			if (!colisionPlatPared(paredLateral, 1))
 				movimientoX = lerp(movimientoX, movimientoX + 1, 0.5);
 			break;
@@ -452,6 +475,7 @@ void render(){
 	
 	// Permite saber que tecla es seleccionada.
 	glutKeyboardFunc(teclaPresionada);
+	glutSpecialFunc(flechaPresionada);
 
 	//ejesCoordenada(2.0);
 	compilarJuego();
