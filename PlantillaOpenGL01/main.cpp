@@ -9,11 +9,9 @@
 		Edward Fernández - Carnet: 10-11121.
 		María Lourdes    - Carnet: 10-10264.
 */
-
 /*
 	TO DO:
 		+ Hacer que los bloques tengan las equinas no tan recta.
-		+ Hacer que se mueva con las flechas.
 */
 
 #include <ctime>          // Librería para importar la variable time.
@@ -74,6 +72,7 @@ bool colisionPlatPared(Bloque pared, int direccion);
 float lerp(float posInicial, float posFinal, float deltaTime);
 
 /*--------------------------------*/
+
 /*
 	Descripción:
 		Permite obtener un booleano de forma aleatoria partiendo de un
