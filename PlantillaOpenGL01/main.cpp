@@ -96,7 +96,7 @@ Bloque paredSuperior;          // Bloque que representará a la pared superior de
 Bloque plataforma;			   // Plataforma que utilizará el jugador.
 Bloque listaBloques[5][7];     // Conjunto de todos los bloques "enemigos" que se
 							   // mostrarán en pantalla.
-Bonus bonus; // --------------------------------------------------------------------------Revisar
+Bonus bonus[6];
 
 /*---------- Definición de las funciones ----------*/
 void generarPelota(void);
@@ -108,7 +108,7 @@ void ejesCoordenada(float w);
 void flechaPresionada(int flecha, int x, int y);
 void teclaPresionada(unsigned char tecla, int x, int y);
 void dibujarPelota(float coordX, float coordY, float radio);
-void dibujarBonus(float coordX, float coordY, float tam, int tipo);
+void dibujarBonus(float coordX, float coordY, float tam, int tipo,int id);
 void generarBonus(void);
 
 bool randomBool(int numElementos);
@@ -436,13 +436,15 @@ void generarListaBloques(void)
 							    				  // tempPosicion = posicionParedIzq + anchoPared + separación
 	float tempPosicionY = 14;                     // Almacenará la posición actual Y donde se generará el bloque.
 
+	int posBonus = 0;							  // Posición en el arreglo de bonus del bonus que se está creando.
+
 	for(int i= 0; i < 5; i++)
 	{
 		for (int j = 0; j < 7; j++)
 		{
 			bloqueIJ = 10 + 10*i + j;
 			listaBloques[i][j].puntos[0].push_back(tempPosicionX);       // Posición x del primer punto. 
-			listaBloques[i][j].puntos[0].push_back(tempPosicionY);       // Posición x del primer punto. 
+			listaBloques[i][j].puntos[0].push_back(tempPosicionY);       // Posición y del primer punto. 
 			listaBloques[i][j].puntos[1].push_back(tempPosicionX);       // Posición x del segundo punto. 
 			listaBloques[i][j].puntos[1].push_back(tempPosicionY - 0.6); // Posición y del segundo punto.
 			listaBloques[i][j].puntos[2].push_back(tempPosicionX + 1.9); // Posición x del tercer punto. 
@@ -454,6 +456,9 @@ void generarListaBloques(void)
 			if (numBloquesBon > 0){
 				listaBloques[i][j].tieneBonus = randomBool(6);
 				numBloquesBon = listaBloques[i][j].tieneBonus ? numBloquesBon - 1 :  numBloquesBon;
+				bonus[posBonus].centroXBonus = listaBloques[i][j].puntos[1][0]+0.95;
+				bonus[posBonus].centroYBonus = listaBloques[i][j].puntos[1][1];
+				//posBonus += 1;
 			}
 
 			// Se determina si el bloque será especial.
@@ -623,9 +628,9 @@ void prueba(){
 	Descripción:
 		permite crear el bonus
 */
-void dibujarBonus(float coordX, float coordY, float tam, int tipo)
+void dibujarBonus(float coordX, float coordY, float tam, int tipo, int id)
 {
-	bonus.tipo = tipo;
+	bonus[id].tipo = tipo;
 
 	// Se definen los puntos que generan al bonus.
 	// ( Cada vez que le hace push a un vector se le agrega una nueva coordenada.)
@@ -652,24 +657,24 @@ void dibujarBonus(float coordX, float coordY, float tam, int tipo)
 	}
 	else if (tipo == 2)
 	{
-		bonus.puntos[0].push_back(coordX - tamBonus);			        // Posición x del primer punto. 
-		bonus.puntos[0].push_back(coordY - tamBonus);					// Posición y del primer punto.
-		bonus.puntos[1].push_back(coordX - tamBonus);        			// Posición x del segundo punto. 
-		bonus.puntos[1].push_back(coordY + tamBonus);					// Posición y del segundo punto.
-		bonus.puntos[2].push_back(coordX + tamBonus);				    // Posición x del tercer punto. 
-		bonus.puntos[2].push_back(coordY + tamBonus);					// Posición y del tercer punto.
-		bonus.puntos[3].push_back(coordX + tamBonus);					// Posición x del cuarto punto. 
-		bonus.puntos[3].push_back(coordY - tamBonus);					// Posición y del cuarto punto.
+		bonus[id].puntos[0].push_back(coordX - tamBonus);			        // Posición x del primer punto. 
+		bonus[id].puntos[0].push_back(coordY - tamBonus);					// Posición y del primer punto.
+		bonus[id].puntos[1].push_back(coordX - tamBonus);        			// Posición x del segundo punto. 
+		bonus[id].puntos[1].push_back(coordY + tamBonus);					// Posición y del segundo punto.
+		bonus[id].puntos[2].push_back(coordX + tamBonus);				    // Posición x del tercer punto. 
+		bonus[id].puntos[2].push_back(coordY + tamBonus);					// Posición y del tercer punto.
+		bonus[id].puntos[3].push_back(coordX + tamBonus);					// Posición x del cuarto punto. 
+		bonus[id].puntos[3].push_back(coordY - tamBonus);					// Posición y del cuarto punto.
 
 		glBegin(GL_QUADS);
-			glVertex2f(bonus.puntos[0][0], bonus.puntos[0][1]);
-			glVertex2f(bonus.puntos[1][0], bonus.puntos[1][1]);
-			glVertex2f(bonus.puntos[2][0], bonus.puntos[2][1]);
-			glVertex2f(bonus.puntos[3][0], bonus.puntos[3][1]);
+			glVertex2f(bonus[id].puntos[0][0], bonus[id].puntos[0][1]);
+			glVertex2f(bonus[id].puntos[1][0], bonus[id].puntos[1][1]);
+			glVertex2f(bonus[id].puntos[2][0], bonus[id].puntos[2][1]);
+			glVertex2f(bonus[id].puntos[3][0], bonus[id].puntos[3][1]);
 		glEnd();
 	}
 	
-	bonus.agarrado = false;
+	bonus[id].agarrado = false;
 }
 
 void generarBonus(void)
@@ -678,7 +683,7 @@ void generarBonus(void)
 	glNewList(glBonus, GL_COMPILE);
 		glPushMatrix();
 			glColor3f(0.93, 0.0, 0.93);
-			dibujarBonus(bonus.centroXBonus,bonus.centroYBonus,tamBonus,1);
+			dibujarBonus(bonus[0].centroXBonus,bonus[0].centroYBonus,tamBonus,1,0); //--------------------------arreglar
 		glPopMatrix();
 	glEndList();
 }
@@ -719,7 +724,7 @@ void ejecutarJuego(void)
 
 	glPushMatrix();
 		bloqueIJ = 10;
-		for (int i = 0; i < 1; i++)
+		for (int i = 0; i < 5; i++)
 		{
 			for(int j = 0; j < 7; j++)
 			{
@@ -740,9 +745,11 @@ void ejecutarJuego(void)
 			revisarColisionPelota();
 		}
 	glPopMatrix();
+
 	glPushMatrix();
 		glCallList(glBonus);
 	glPopMatrix();
+
 }
 
 void ejesCoordenada(float w) {
