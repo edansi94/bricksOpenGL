@@ -15,6 +15,7 @@
 #include <iostream>
 #include <GL\glew.h>
 #include <GL\freeglut.h>
+#include <map>            // Librería que me permite utilizar hash.
 
 using namespace std;
 
@@ -44,6 +45,7 @@ typedef struct
 {
 	int tipo;					// Indica que tipo de bonus es.
 	bool agarrado;				// Indica si el bonus ha sido agarrado.
+	bool lanzado;               // Indica si el bonus puede moverse.
 	float centroXBonus;			// Coordenada en x del centro del Bonus
 	float centroYBonus;			// Coordenada en y del centro del Bonus    
 	vector<float> puntos[4];	// Arreglo de vectores que almacenará los puntos del bonus.
@@ -52,9 +54,11 @@ typedef struct
 /*------ Variables Globales ------*/
 // Para la creación de los bloques "enemigos".
 int bloqueIJ = 0;				// Permitirá saber que bloque "enemigo" se generará.
+int bonusJ   = 0;               // Permitirá saber que bloque  se generará
+int direccion = 0;              // Para donde se mueve la plataforma. 
 int numBloquesEsp = 5;			// Cantidad de bloques que pueden ser especiales.
 int numBloquesBon = 6;			// Cantidad de bloques que tendrán bonus.
-int periodoRef    = 30;			// Tiempo para recargar en milisegundos.
+int periodoRef    = 15;			// Tiempo para recargar en milisegundos.
 
 // Para la creación de las paredes laterales. 
 float posXIniParedLat = 12.0;	// Punto X donde se dibujará una pared lateral.
@@ -79,8 +83,8 @@ float movPlat      =   0.00;    // Velocidad en X de la plataforma.
 float radPelota	  =	 0.3;		// Radio de la pelota
 float centroXPelota = 0.0;		// Centro de la pelota en X.
 float centroYPelota = 0.0;		// Centro de la pelota en Y.
-float velXPelota = 0.08;		// Velocidad en x que tendrá la pelota.
-float velYPelota = 0.10;		// Velocidad en y que tendrá la pelota.
+float velXPelota = 0.04;		// Velocidad en x que tendrá la pelota.
+float velYPelota = 0.05;		// Velocidad en y que tendrá la pelota.
 
 // Para la creacion de los bonus
 float tamBonus	 = 0.2;			// Radio en caso de ser un circulo y mitad del lado en caso de ser un cuadrado
@@ -89,6 +93,7 @@ float aumentVel  = 1.40;		// Porcentaje de aumento de la velocidad de la pelota 
 float disminTam  = 0.85;		// Porcentaje de disminución del tamaño de la plataforma en el Bonus tipo 2
 
 bool comenzoJuego = false;	   // Indica si la pelota ya se puede mover.
+bool cargoBloques = false;     // Indica si se cargaron los bloques.
 
 Bloque paredLateralIzq;        // Bloque que representará la pared izquierda.
 Bloque paredLateralDer;        // Bloque que representará la pared derecha.
@@ -97,19 +102,22 @@ Bloque plataforma;			   // Plataforma que utilizará el jugador.
 Bloque listaBloques[5][7];     // Conjunto de todos los bloques "enemigos" que se
 							   // mostrarán en pantalla.
 Bonus bonus[6];
+map<int, Bonus> listaBonus;    // Conjunto de todos los bloques a mostrar. 
 
 /*---------- Definición de las funciones ----------*/
+void generarBonus(void);
 void generarPelota(void);
+void temporizador(int valor);
 void generarParedLatIzq(void);
 void generarParedLatDer(void);
 void generarListaBloques(void);
-void temporizador(int valor);
-void ejesCoordenada(float w);
+void actualizacionBloques(void);
+void colisionPelotaBloques(void);
+void dibujarBonus(int id, float tam);
 void flechaPresionada(int flecha, int x, int y);
 void teclaPresionada(unsigned char tecla, int x, int y);
 void dibujarPelota(float coordX, float coordY, float radio);
-void dibujarBonus(float coordX, float coordY, float tam, int tipo,int id);
-void generarBonus(void);
+
 
 bool randomBool(int numElementos);
 bool colisionPlatPared(float limitePared, int direccion);
@@ -117,6 +125,8 @@ bool colisionPlatPared(float limitePared, int direccion);
 int calculoNumeroSegmento(float radio);
 
 float lerp(float posInicial, float posFinal, float deltaTime);
+
+Bonus crearBonus(float centroX, float centroY, int tipoBonus);
 
 /*---------- Desarrollo de las funciones ----------*/
 /*
@@ -381,7 +391,8 @@ void generarPlataforma(void)
 		Permite calcular el número de segmentos a utilizar en la generación
 		de un círculo.
  */
-int calculoNumeroSegmento(float radio){
+int calculoNumeroSegmento(float radio)
+{
 	return 70 * sqrtf(radio);
 }
 
@@ -425,6 +436,35 @@ void generarPelota(void)
 	glEndList();
 }
 
+/*
+	Descripción:
+		Permite crear un bonus con el centro en X, el centro en Y y
+		que tipo de bonus será.
+*/
+Bonus crearBonus(float centroX, float centroY, int tipoBonus)
+{
+	Bonus nuevoB;
+
+	nuevoB.centroXBonus = centroX;
+	nuevoB.centroYBonus = centroY;
+	nuevoB.tipo = tipoBonus;
+	nuevoB.agarrado = false;
+	nuevoB.lanzado = false;
+
+	if (tipoBonus == 1){
+		nuevoB.puntos[0].push_back(centroX - tamBonus);			        // Posición x del primer punto. 
+		nuevoB.puntos[0].push_back(centroY - tamBonus);					// Posición y del primer punto.
+		nuevoB.puntos[1].push_back(centroX - tamBonus);        			// Posición x del segundo punto. 
+		nuevoB.puntos[1].push_back(centroY + tamBonus);					// Posición y del segundo punto.
+		nuevoB.puntos[2].push_back(centroX + tamBonus);				    // Posición x del tercer punto. 
+		nuevoB.puntos[2].push_back(centroY + tamBonus);					// Posición y del tercer punto.
+		nuevoB.puntos[3].push_back(centroX + tamBonus);					// Posición x del cuarto punto. 
+		nuevoB.puntos[3].push_back(centroY - tamBonus);
+	}
+
+	return(nuevoB);
+}
+
 /* 
 	Descripción:
 		Permite generar los bloques "enemigos".
@@ -454,10 +494,10 @@ void generarListaBloques(void)
 	
 			// Se determina si el bloque tendrá bonus.
 			if (numBloquesBon > 0){
-				listaBloques[i][j].tieneBonus = randomBool(6);
+				listaBloques[i][j].tieneBonus = randomBool(1); // Es 3
 				numBloquesBon = listaBloques[i][j].tieneBonus ? numBloquesBon - 1 :  numBloquesBon;
-				bonus[posBonus].centroXBonus = listaBloques[i][j].puntos[1][0]+0.95;
-				bonus[posBonus].centroYBonus = listaBloques[i][j].puntos[1][1];
+				//bonus[posBonus].centroXBonus = listaBloques[i][j].puntos[1][0]+0.95;
+				//bonus[posBonus].centroYBonus = listaBloques[i][j].puntos[1][1];
 				//posBonus += 1;
 			}
 
@@ -467,17 +507,167 @@ void generarListaBloques(void)
 				numBloquesEsp = listaBloques[i][j].esEspecial ? numBloquesEsp - 1 :  numBloquesEsp;
 			}
 
+			if (listaBloques[i][j].esEspecial) listaBloques[i][j].vida = 2;
+			else listaBloques[i][j].vida = 1;
+
+			if (listaBloques[i][j].tieneBonus){
+				int bonusSeleccionado = randomBool(2);
+				listaBonus[bloqueIJ] = crearBonus(listaBloques[i][j].puntos[0][0]+0.95,
+												  listaBloques[i][j].puntos[0][1], 0);
+				printf("Bonus %d %d\n",i, j);
+			} 
+
 			listaBloques[i][j].estaActivo = true;
 			listaBloques[i][j].esJugador  = false;
-			listaBloques[i][j].vida = 1;
+			
 
 			tempPosicionX += 3;
-			
-			// Se construye el bloque enemigo.
 		}
 
 		tempPosicionX  = - posXIniParedLat + 2;
 		tempPosicionY -= 1.3;
+	}
+
+	cargoBloques = true;
+}
+
+/*
+	Descripción:
+		Permite verificar si existe colisión entre la pelota y los bloques "enemigos". En caso
+		de que se produzca una colisión la pelota podrá cambiar su dirección en X y/o Y.
+*/
+void colisionPelotaBloques(void)
+{
+	/*------ FILA 1 ------ */
+	if (listaBloques[0][0].estaActivo && (listaBloques[0][0].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[0][0].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[0][0].puntos[0][1] - 7.2 > centroYPelota) && (listaBloques[0][0].puntos[2][1] - 7.2 < centroYPelota))
+	{
+		listaBloques[0][0].vida -= 1;
+		listaBloques[0][0].vida == 0 ? listaBloques[0][0].estaActivo = false : listaBloques[0][0].estaActivo = true;
+
+		velYPelota = -velYPelota;
+
+		if (posXIniPlat + movPlat + (largoXPlat / 2) >= centroXPelota){ 
+			if (listaBloques[0][0].puntos[2][1] - 7.2 < centroYPelota) velXPelota = -velXPelota;
+		}else{
+			if (listaBloques[0][0].puntos[0][1] - 7.2 > centroYPelota) velXPelota = -velXPelota;
+		}
+
+		if (listaBonus.find(10) != listaBonus.end()) 
+			dibujarBonus(10, tamBonus);
+
+	}
+
+	if (listaBloques[0][1].estaActivo && (listaBloques[0][1].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[0][1].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[0][1].puntos[0][1] - 7.2 > centroYPelota) && (listaBloques[0][1].puntos[2][1] - 7.2 < centroYPelota))
+	{
+		listaBloques[0][1].vida -= 1;
+		listaBloques[0][1].vida == 0 ? listaBloques[0][1].estaActivo = false : listaBloques[0][1].estaActivo = true;
+
+		velYPelota = -velYPelota;
+
+		if (posXIniPlat + movPlat + (largoXPlat / 2) >= centroXPelota){ 
+			if (listaBloques[0][1].puntos[2][1] - 7.2 < centroYPelota) velXPelota = -velXPelota;
+		}else{
+			if (listaBloques[0][1].puntos[0][1] - 7.2 > centroYPelota) velXPelota = -velXPelota;
+		}
+
+		if (listaBonus.find(11) != listaBonus.end()) 
+			dibujarBonus(11, tamBonus);
+
+	}
+
+	if (listaBloques[0][2].estaActivo && (listaBloques[0][2].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[0][2].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[0][2].puntos[0][1] - 7.2 > centroYPelota) && (listaBloques[0][2].puntos[2][1] - 7.2 < centroYPelota))
+	{
+		listaBloques[0][2].vida -= 1;
+		listaBloques[0][2].vida == 0 ? listaBloques[0][2].estaActivo = false : listaBloques[0][2].estaActivo = true;
+
+		velYPelota = -velYPelota;
+
+		if (posXIniPlat + movPlat + (largoXPlat / 2) >= centroXPelota){ 
+			if (listaBloques[0][2].puntos[2][1] - 7.2 < centroYPelota) velXPelota = -velXPelota;
+		}else{
+			if (listaBloques[0][2].puntos[0][1] - 7.2 > centroYPelota) velXPelota = -velXPelota;
+		}
+
+		if (listaBonus.find(12) != listaBonus.end()) 
+			dibujarBonus(12, tamBonus);
+	}
+
+	if (listaBloques[0][3].estaActivo && (listaBloques[0][3].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[0][3].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[0][3].puntos[0][1] - 7.2 > centroYPelota) && (listaBloques[0][3].puntos[2][1] - 7.2 < centroYPelota))
+	{
+		listaBloques[0][3].vida -= 1;
+		listaBloques[0][3].vida == 0 ? listaBloques[0][3].estaActivo = false : listaBloques[0][3].estaActivo = true;
+
+		velYPelota = -velYPelota;
+
+		if (posXIniPlat + movPlat + (largoXPlat / 2) >= centroXPelota){ 
+			if (listaBloques[0][3].puntos[2][1] - 7.2 < centroYPelota) velXPelota = -velXPelota;
+		}else{
+			if (listaBloques[0][3].puntos[0][1] - 7.2 > centroYPelota) velXPelota = -velXPelota;
+		}
+
+		if (listaBonus.find(13) != listaBonus.end()) 
+			dibujarBonus(13, tamBonus);
+
+	}
+
+	if (listaBloques[0][4].estaActivo && (listaBloques[0][4].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[0][4].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[0][4].puntos[0][1] - 7.2 > centroYPelota) && (listaBloques[0][4].puntos[2][1] - 7.2 < centroYPelota))
+	{
+		listaBloques[0][4].vida -= 1;
+		listaBloques[0][4].vida == 0 ? listaBloques[0][4].estaActivo = false : listaBloques[0][4].estaActivo = true;
+
+		velYPelota = -velYPelota;
+
+		if (posXIniPlat + movPlat + (largoXPlat / 2) >= centroXPelota){ 
+			if (listaBloques[0][4].puntos[2][1] - 7.2 < centroYPelota) velXPelota = -velXPelota;
+		}else{
+			if (listaBloques[0][4].puntos[0][1] - 7.2 > centroYPelota) velXPelota = -velXPelota;
+		}
+
+		if (listaBonus.find(14) != listaBonus.end()) 
+			dibujarBonus(14, tamBonus);
+	}
+
+	if (listaBloques[0][5].estaActivo && (listaBloques[0][5].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[0][5].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[0][5].puntos[0][1] - 7.2 > centroYPelota) && (listaBloques[0][5].puntos[2][1] - 7.2 < centroYPelota))
+	{
+		listaBloques[0][5].vida -= 1;
+		listaBloques[0][5].vida == 0 ? listaBloques[0][5].estaActivo = false : listaBloques[0][5].estaActivo = true;
+
+		if (posXIniPlat + movPlat + (largoXPlat / 2) >= centroXPelota){ 
+			if (listaBloques[0][5].puntos[2][1] - 7.2 < centroYPelota) velXPelota = -velXPelota;
+		}else{
+			if (listaBloques[0][5].puntos[0][1] - 7.2 > centroYPelota) velXPelota = -velXPelota;
+		}
+
+		velYPelota = -velYPelota;
+
+		if (listaBonus.find(15) != listaBonus.end()){ 
+			dibujarBonus(15, tamBonus);
+			printf("\nEntre aqui... \n");
+		}
+	}
+
+	if (listaBloques[0][6].estaActivo && (listaBloques[0][6].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[0][6].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[0][6].puntos[0][1] - 7.2 > centroYPelota) && (listaBloques[0][6].puntos[2][1] - 7.2 < centroYPelota))
+	{
+		listaBloques[0][6].vida -= 1;
+		listaBloques[0][6].vida == 0 ? listaBloques[0][6].estaActivo = false : listaBloques[0][6].estaActivo = true;
+
+		velYPelota = -velYPelota;
+
+		if (posXIniPlat + movPlat + (largoXPlat / 2) >= centroXPelota){ 
+			if (listaBloques[0][6].puntos[2][1] - 7.2 < centroYPelota) velXPelota = -velXPelota;
+		}else{
+			if (listaBloques[0][6].puntos[0][1] - 7.2 > centroYPelota) velXPelota = -velXPelota;
+		}
+
+		if (listaBonus.find(16) != listaBonus.end()) 
+			dibujarBonus(16, tamBonus);
 	}
 }
 
@@ -506,85 +696,20 @@ void revisarColisionPelota(void)
 	}
 
 	// Colisión plataforma en X.
-	if  ((centroYPelota < 0) && (posXIniPlat + movPlat <= centroXPelota) && 
-		 (- posXIniPlat + movPlat >= centroXPelota)){
-		velYPelota = -velYPelota;
+	if  ((centroYPelota < 0 && centroYPelota > - largoYPlat + 0.1) && (posXIniPlat + movPlat - 0.1 <= centroXPelota) && 
+		 (- posXIniPlat + movPlat + 0.1 >= centroXPelota)){
+			 velYPelota = -velYPelota;
+		if (posXIniPlat + movPlat + (largoXPlat / 2) >= centroXPelota){ 
+			if (direccion == -1) velXPelota = -velXPelota;
+		}else{
+			if (direccion == 1) velXPelota = -velXPelota;
+		}
 	}
 
-	/*------ FILA 1 ------ */
-	if (listaBloques[0][0].estaActivo && (listaBloques[0][0].puntos[0][0] < centroXPelota) && (listaBloques[0][0].puntos[3][0] + 0.1 > centroXPelota)
-		&& (listaBloques[0][0].puntos[0][1] - 7.2 > centroYPelota) && (listaBloques[0][0].puntos[2][1] - 7.2 < centroYPelota))
-	{
-		listaBloques[0][0].vida -= 1;
-		listaBloques[0][0].vida == 0 ? listaBloques[0][0].estaActivo = false : listaBloques[0][0].estaActivo = true;
-
-		velXPelota = -velXPelota;
-		velYPelota = -velYPelota;
-	}
-
-	if (listaBloques[0][1].estaActivo && (listaBloques[0][1].puntos[0][0] < centroXPelota) && (listaBloques[0][1].puntos[3][0] + 0.1 > centroXPelota)
-		&& (listaBloques[0][1].puntos[0][1] - 7.2 > centroYPelota) && (listaBloques[0][1].puntos[2][1] - 7.2 < centroYPelota))
-	{
-		listaBloques[0][1].vida -= 1;
-		listaBloques[0][1].vida == 0 ? listaBloques[0][1].estaActivo = false : listaBloques[0][1].estaActivo = true;
-
-		velXPelota = -velXPelota;
-		velYPelota = -velYPelota;
-	}
-
-	if (listaBloques[0][2].estaActivo && (listaBloques[0][2].puntos[0][0] < centroXPelota) && (listaBloques[0][2].puntos[3][0] + 0.1 > centroXPelota)
-		&& (listaBloques[0][2].puntos[0][1] - 7.2 > centroYPelota) && (listaBloques[0][2].puntos[2][1] - 7.2 < centroYPelota))
-	{
-		listaBloques[0][2].vida -= 1;
-		listaBloques[0][2].vida == 0 ? listaBloques[0][2].estaActivo = false : listaBloques[0][2].estaActivo = true;
-
-		velXPelota = -velXPelota;
-		velYPelota = -velYPelota;
-	}
-
-	if (listaBloques[0][3].estaActivo && (listaBloques[0][3].puntos[0][0] < centroXPelota) && (listaBloques[0][3].puntos[3][0] + 0.1 > centroXPelota)
-		&& (listaBloques[0][3].puntos[0][1] - 7.2 > centroYPelota) && (listaBloques[0][3].puntos[2][1] - 7.2 < centroYPelota))
-	{
-		listaBloques[0][3].vida -= 1;
-		listaBloques[0][3].vida == 0 ? listaBloques[0][3].estaActivo = false : listaBloques[0][3].estaActivo = true;
-
-		velXPelota = -velXPelota;
-		velYPelota = -velYPelota;
-	}
-
-	if (listaBloques[0][4].estaActivo && (listaBloques[0][4].puntos[0][0] < centroXPelota) && (listaBloques[0][4].puntos[3][0] + 0.1 > centroXPelota)
-		&& (listaBloques[0][4].puntos[0][1] - 7.2 > centroYPelota) && (listaBloques[0][4].puntos[2][1] - 7.2 < centroYPelota))
-	{
-		listaBloques[0][4].vida -= 1;
-		listaBloques[0][4].vida == 0 ? listaBloques[0][4].estaActivo = false : listaBloques[0][4].estaActivo = true;
-
-		velXPelota = -velXPelota;
-		velYPelota = -velYPelota;
-	}
-
-	if (listaBloques[0][5].estaActivo && (listaBloques[0][5].puntos[0][0] < centroXPelota) && (listaBloques[0][5].puntos[3][0] + 0.1 > centroXPelota)
-		&& (listaBloques[0][5].puntos[0][1] - 7.2 > centroYPelota) && (listaBloques[0][5].puntos[2][1] - 7.2 < centroYPelota))
-	{
-		listaBloques[0][5].vida -= 1;
-		listaBloques[0][5].vida == 0 ? listaBloques[0][5].estaActivo = false : listaBloques[0][5].estaActivo = true;
-
-		velXPelota = -velXPelota;
-		velYPelota = -velYPelota;
-
-	}
-
-	if (listaBloques[0][6].estaActivo && (listaBloques[0][6].puntos[0][0] < centroXPelota) && (listaBloques[0][6].puntos[3][0] + 0.1 > centroXPelota)
-		&& (listaBloques[0][6].puntos[0][1] - 7.2 > centroYPelota) && (listaBloques[0][6].puntos[2][1] - 7.2 < centroYPelota))
-	{
-		listaBloques[0][6].vida -= 1;
-		listaBloques[0][6].vida == 0 ? listaBloques[0][6].estaActivo = false : listaBloques[0][6].estaActivo = true;
-
-		velXPelota = -velXPelota;
-		velYPelota = -velYPelota;
-	}
+	colisionPelotaBloques(); // Se verifican las colisiones entre la pelota y los bloques.
 }
 
-void prueba(){
+void actualizacionBloques(void){
 	for(int i= 0; i < 5; i++)
 	{
 		for (int j = 0; j < 7; j++)
@@ -594,18 +719,32 @@ void prueba(){
 				glBegin(GL_QUADS);
 					glPushMatrix();
 						if (listaBloques[i][j].estaActivo){
-							if (listaBloques[i][j].esEspecial)
-								glColor3f(1.0, 0.0, 0.0);
-							else
-								glColor3f(0.96, 0.67, 0.2);
+							if (listaBloques[i][j].esEspecial){
+								if (listaBloques[i][j].vida == 2) glColor3f(1.0, 0.0, 0.0);
+								else glColor3f(1.0, 1.0, 1.0); // Color bloque roto.
+							}else glColor3f(0.96, 0.67, 0.2);
 						}	
 						else{
 							glColor3f(0.0, 0.0, 0.0);
 						}
-						glVertex2f(listaBloques[i][j].puntos[0][0], listaBloques[i][j].puntos[0][1]);
-						glVertex2f(listaBloques[i][j].puntos[1][0], listaBloques[i][j].puntos[1][1]);
-						glVertex2f(listaBloques[i][j].puntos[2][0], listaBloques[i][j].puntos[2][1]);
-						glVertex2f(listaBloques[i][j].puntos[3][0], listaBloques[i][j].puntos[3][1]);
+						
+						if (listaBloques[i][j].esEspecial && listaBloques[i][j].vida == 1){ // Código del bloque roto.
+							// Mitad izquierda del bloque roto
+							glVertex2f(listaBloques[i][j].puntos[0][0], listaBloques[i][j].puntos[0][1]);
+							glVertex2f(listaBloques[i][j].puntos[1][0], listaBloques[i][j].puntos[1][1]);
+							glVertex2f(listaBloques[i][j].puntos[1][0]+0.6, listaBloques[i][j].puntos[1][1]);
+							glVertex2f(listaBloques[i][j].puntos[0][0]+0.9, listaBloques[i][j].puntos[0][1]);
+							// Mitad derecha del bloque roto
+							glVertex2f(listaBloques[i][j].puntos[3][0]-0.6, listaBloques[i][j].puntos[3][1]);
+							glVertex2f(listaBloques[i][j].puntos[2][0]-0.9, listaBloques[i][j].puntos[2][1]);
+							glVertex2f(listaBloques[i][j].puntos[2][0], listaBloques[i][j].puntos[2][1]);
+							glVertex2f(listaBloques[i][j].puntos[3][0], listaBloques[i][j].puntos[3][1]);
+						}else{
+							glVertex2f(listaBloques[i][j].puntos[0][0], listaBloques[i][j].puntos[0][1]);
+							glVertex2f(listaBloques[i][j].puntos[1][0], listaBloques[i][j].puntos[1][1]);
+							glVertex2f(listaBloques[i][j].puntos[2][0], listaBloques[i][j].puntos[2][1]);
+							glVertex2f(listaBloques[i][j].puntos[3][0], listaBloques[i][j].puntos[3][1]);
+						}
 					glPopMatrix();
 				glEnd();
 			glEndList();
@@ -628,13 +767,11 @@ void prueba(){
 	Descripción:
 		permite crear el bonus
 */
-void dibujarBonus(float coordX, float coordY, float tam, int tipo, int id)
+void dibujarBonus(int id, float tam)
 {
-	bonus[id].tipo = tipo;
-
 	// Se definen los puntos que generan al bonus.
 	// ( Cada vez que le hace push a un vector se le agrega una nueva coordenada.)
-	if (tipo == 1)
+	if (listaBonus[id].tipo == 0)
 	{
 		int numSegmentos = calculoNumeroSegmento(tam);
 		float theta = 2 * 3.1415926 / float(numSegmentos);
@@ -647,7 +784,7 @@ void dibujarBonus(float coordX, float coordY, float tam, int tipo, int id)
 		glBegin(GL_POLYGON);
 			for(int i = 0; i < numSegmentos; i++)
 			{
-				glVertex2d(x + coordX, y + coordY);
+				glVertex2d(x + listaBonus[id].centroXBonus, y + listaBonus[id].centroYBonus);
 
 				temp = x;
 				x = coseno*x - seno*y;
@@ -655,17 +792,8 @@ void dibujarBonus(float coordX, float coordY, float tam, int tipo, int id)
 			}
 		glEnd();
 	}
-	else if (tipo == 2)
+	else if (listaBonus[id].tipo == 1)
 	{
-		bonus[id].puntos[0].push_back(coordX - tamBonus);			        // Posición x del primer punto. 
-		bonus[id].puntos[0].push_back(coordY - tamBonus);					// Posición y del primer punto.
-		bonus[id].puntos[1].push_back(coordX - tamBonus);        			// Posición x del segundo punto. 
-		bonus[id].puntos[1].push_back(coordY + tamBonus);					// Posición y del segundo punto.
-		bonus[id].puntos[2].push_back(coordX + tamBonus);				    // Posición x del tercer punto. 
-		bonus[id].puntos[2].push_back(coordY + tamBonus);					// Posición y del tercer punto.
-		bonus[id].puntos[3].push_back(coordX + tamBonus);					// Posición x del cuarto punto. 
-		bonus[id].puntos[3].push_back(coordY - tamBonus);					// Posición y del cuarto punto.
-
 		glBegin(GL_QUADS);
 			glVertex2f(bonus[id].puntos[0][0], bonus[id].puntos[0][1]);
 			glVertex2f(bonus[id].puntos[1][0], bonus[id].puntos[1][1]);
@@ -673,17 +801,14 @@ void dibujarBonus(float coordX, float coordY, float tam, int tipo, int id)
 			glVertex2f(bonus[id].puntos[3][0], bonus[id].puntos[3][1]);
 		glEnd();
 	}
-	
-	bonus[id].agarrado = false;
 }
 
 void generarBonus(void)
 {
-	// TODO ver como asignar que tipo de bonus es
 	glNewList(glBonus, GL_COMPILE);
 		glPushMatrix();
 			glColor3f(0.93, 0.0, 0.93);
-			dibujarBonus(bonus[0].centroXBonus,bonus[0].centroYBonus,tamBonus,1,0); //--------------------------arreglar
+			//dibujarBonus(bonus[0].centroXBonus,bonus[0].centroYBonus,tamBonus,1,0); //--------------------------arreglar
 		glPopMatrix();
 	glEndList();
 }
@@ -700,8 +825,8 @@ void compilarJuego(void)
 	generarParedSup();
 	generarPlataforma();
 	generarPelota();
-	generarBonus();
-	prueba();
+	//generarBonus();
+	actualizacionBloques();
 }
 
 /*
@@ -724,7 +849,7 @@ void ejecutarJuego(void)
 
 	glPushMatrix();
 		bloqueIJ = 10;
-		for (int i = 0; i < 5; i++)
+		for (int i = 0; i < 1; i++)
 		{
 			for(int j = 0; j < 7; j++)
 			{
@@ -752,46 +877,6 @@ void ejecutarJuego(void)
 
 }
 
-void ejesCoordenada(float w) {
-	
-	glLineWidth(w);
-	glBegin(GL_LINES);
-		glColor3f(1.0,0.0,0.0);
-		glVertex2f(0,10);
-		glVertex2f(0,-10);
-		glColor3f(0.0,0.0,1.0);
-		glVertex2f(10,0);
-		glVertex2f(-10,0);
-	glEnd();
-
-	glLineWidth(w-1.0);
-	int i;
-	glColor3f(0.0,1.0,0.0);
-	glBegin(GL_LINES);
-		for(i = -10; i <=10; i++){
-			if (i!=0) {		
-				if ((i%2)==0){	
-					glVertex2f(i,0.4);
-					glVertex2f(i,-0.4);
-
-					glVertex2f(0.4,i);
-					glVertex2f(-0.4,i);
-				}else{
-					glVertex2f(i,0.2);
-					glVertex2f(i,-0.2);
-
-					glVertex2f(0.2,i);
-					glVertex2f(-0.2,i);
-
-				}
-			}
-		}
-		
-	glEnd();
-
-	glLineWidth(1.0);
-}
-
 void changeViewport(int w, int h) {
 	float aspectradio;
 
@@ -815,23 +900,16 @@ void render(){
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	
-	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	//glMatrixMode(GL_MODELVIEW);
-	//glLoadIdentity();
-	//mostrar();
-	
 	// Permite saber que tecla es seleccionada.
 	glutKeyboardFunc(teclaPresionada);
 	glutSpecialFunc(flechaPresionada);
 
 	//ejesCoordenada(2.0);
-	if (!comenzoJuego) generarListaBloques();
+	if (!cargoBloques) generarListaBloques();
 	compilarJuego();
 	ejecutarJuego();
 	glutSwapBuffers();
 }
-
 
 int main (int argc, char** argv) {
 
