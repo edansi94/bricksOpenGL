@@ -43,6 +43,7 @@ typedef struct
 
 typedef struct
 {
+	int id;                     // Identificador del bonus.
 	int tipo;					// Indica que tipo de bonus es.
 	bool agarrado;				// Indica si el bonus ha sido agarrado.
 	bool lanzado;               // Indica si el bonus puede moverse.
@@ -88,7 +89,7 @@ float velYPelota = 0.05;		// Velocidad en y que tendrá la pelota.
 
 // Para la creacion de los bonus
 float tamBonus	 = 0.2;			// Radio en caso de ser un circulo y mitad del lado en caso de ser un cuadrado
-float velBonus	 = -0.10;		// Velovidad de caida del bonus
+float velBonus	 = -0.05;		// Velovidad de caida del bonus
 float aumentVel  = 1.40;		// Porcentaje de aumento de la velocidad de la pelota en el Bonus tipo 1
 float disminTam  = 0.85;		// Porcentaje de disminución del tamaño de la plataforma en el Bonus tipo 2
 
@@ -103,6 +104,8 @@ Bloque listaBloques[5][7];     // Conjunto de todos los bloques "enemigos" que s
 							   // mostrarán en pantalla.
 Bonus bonus[6];
 map<int, Bonus> listaBonus;    // Conjunto de todos los bloques a mostrar. 
+
+int idBonus;	
 
 /*---------- Definición de las funciones ----------*/
 void generarBonus(void);
@@ -496,9 +499,6 @@ void generarListaBloques(void)
 			if (numBloquesBon > 0){
 				listaBloques[i][j].tieneBonus = randomBool(1); // Es 3
 				numBloquesBon = listaBloques[i][j].tieneBonus ? numBloquesBon - 1 :  numBloquesBon;
-				//bonus[posBonus].centroXBonus = listaBloques[i][j].puntos[1][0]+0.95;
-				//bonus[posBonus].centroYBonus = listaBloques[i][j].puntos[1][1];
-				//posBonus += 1;
 			}
 
 			// Se determina si el bloque será especial.
@@ -512,9 +512,8 @@ void generarListaBloques(void)
 
 			if (listaBloques[i][j].tieneBonus){
 				int bonusSeleccionado = randomBool(2);
-				listaBonus[bloqueIJ] = crearBonus(listaBloques[i][j].puntos[0][0]+0.95,
-												  listaBloques[i][j].puntos[0][1], 0);
-				printf("Bonus %d %d\n",i, j);
+				listaBonus[bloqueIJ] = crearBonus(listaBloques[i][j].puntos[1][0]+0.95,
+												  listaBloques[i][j].puntos[1][1], 0);
 			} 
 
 			listaBloques[i][j].estaActivo = true;
@@ -554,7 +553,11 @@ void colisionPelotaBloques(void)
 		}
 
 		if (listaBonus.find(10) != listaBonus.end()) 
-			dibujarBonus(10, tamBonus);
+		{
+			listaBonus[10].lanzado = true;
+			idBonus = 10;
+			generarBonus();
+		}
 
 	}
 
@@ -573,8 +576,11 @@ void colisionPelotaBloques(void)
 		}
 
 		if (listaBonus.find(11) != listaBonus.end()) 
-			dibujarBonus(11, tamBonus);
-
+		{
+			listaBonus[11].lanzado = true;
+			idBonus = 11;
+			generarBonus();
+		}
 	}
 
 	if (listaBloques[0][2].estaActivo && (listaBloques[0][2].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[0][2].puntos[3][0] + 0.2 > centroXPelota)
@@ -592,7 +598,11 @@ void colisionPelotaBloques(void)
 		}
 
 		if (listaBonus.find(12) != listaBonus.end()) 
-			dibujarBonus(12, tamBonus);
+		{
+			listaBonus[12].lanzado = true;
+			idBonus = 12;
+			generarBonus();
+		}
 	}
 
 	if (listaBloques[0][3].estaActivo && (listaBloques[0][3].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[0][3].puntos[3][0] + 0.2 > centroXPelota)
@@ -610,8 +620,11 @@ void colisionPelotaBloques(void)
 		}
 
 		if (listaBonus.find(13) != listaBonus.end()) 
-			dibujarBonus(13, tamBonus);
-
+		{	
+			listaBonus[13].lanzado = true;
+			idBonus = 13;
+			generarBonus();
+		}
 	}
 
 	if (listaBloques[0][4].estaActivo && (listaBloques[0][4].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[0][4].puntos[3][0] + 0.2 > centroXPelota)
@@ -629,7 +642,11 @@ void colisionPelotaBloques(void)
 		}
 
 		if (listaBonus.find(14) != listaBonus.end()) 
-			dibujarBonus(14, tamBonus);
+		{	
+			listaBonus[14].lanzado = true;
+			idBonus = 14;
+			generarBonus();
+		}
 	}
 
 	if (listaBloques[0][5].estaActivo && (listaBloques[0][5].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[0][5].puntos[3][0] + 0.2 > centroXPelota)
@@ -646,9 +663,11 @@ void colisionPelotaBloques(void)
 
 		velYPelota = -velYPelota;
 
-		if (listaBonus.find(15) != listaBonus.end()){ 
-			dibujarBonus(15, tamBonus);
-			printf("\nEntre aqui... \n");
+		if (listaBonus.find(15) != listaBonus.end()) 
+		{	
+			listaBonus[15].lanzado = true;
+			idBonus = 15;
+			generarBonus();
 		}
 	}
 
@@ -667,8 +686,482 @@ void colisionPelotaBloques(void)
 		}
 
 		if (listaBonus.find(16) != listaBonus.end()) 
-			dibujarBonus(16, tamBonus);
+		{	
+			listaBonus[16].lanzado = true;
+			idBonus = 16;
+			generarBonus();
+		}
 	}
+	/*------ FILA 2 ------ */
+	/*if (listaBloques[1][0].estaActivo && (listaBloques[1][0].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[1][0].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[1][0].puntos[0][1] - 6.5 > centroYPelota) && (listaBloques[1][0].puntos[2][1] - 6.5 < centroYPelota))
+	{
+		listaBloques[1][0].vida -= 1;
+		listaBloques[1][0].vida == 0 ? listaBloques[1][0].estaActivo = false : listaBloques[1][0].estaActivo = true;
+
+		velXPelota = -velXPelota;
+		velYPelota = -velYPelota;
+
+		if (listaBonus.find(20) != listaBonus.end()){ 
+			listaBonus[20].lanzado = true;
+			idBonus = 20;
+			generarBonus();
+		}
+	}
+
+	if (listaBloques[1][1].estaActivo && (listaBloques[1][1].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[1][1].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[1][1].puntos[0][1] - 6.5 > centroYPelota) && (listaBloques[1][1].puntos[2][1] - 6.5 < centroYPelota))
+	{
+		listaBloques[1][1].vida -= 1;
+		listaBloques[1][1].vida == 0 ? listaBloques[1][1].estaActivo = false : listaBloques[1][1].estaActivo = true;
+
+		velXPelota = -velXPelota;
+		velYPelota = -velYPelota;
+
+		if (listaBonus.find(21) != listaBonus.end()){ 
+			listaBonus[21].lanzado = true;
+			idBonus = 21;
+			generarBonus();
+		}
+	}
+
+	if (listaBloques[1][2].estaActivo && (listaBloques[1][2].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[1][2].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[1][2].puntos[0][1] - 6.5 > centroYPelota) && (listaBloques[1][2].puntos[2][1] - 6.5 < centroYPelota))
+	{
+		listaBloques[1][2].vida -= 1;
+		listaBloques[1][2].vida == 0 ? listaBloques[1][2].estaActivo = false : listaBloques[1][2].estaActivo = true;
+
+		velXPelota = -velXPelota;
+		velYPelota = -velYPelota;
+
+		if (listaBonus.find(22) != listaBonus.end()){ 
+			listaBonus[22].lanzado = true;
+			idBonus = 22;
+			generarBonus();
+		}
+	}
+
+	if (listaBloques[1][3].estaActivo && (listaBloques[1][3].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[1][3].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[1][3].puntos[0][1] - 6.5 > centroYPelota) && (listaBloques[1][3].puntos[2][1] - 6.5 < centroYPelota))
+	{
+		listaBloques[1][3].vida -= 1;
+		listaBloques[1][3].vida == 0 ? listaBloques[1][3].estaActivo = false : listaBloques[1][3].estaActivo = true;
+
+		velXPelota = -velXPelota;
+		velYPelota = -velYPelota;
+
+		if (listaBonus.find(23) != listaBonus.end()){ 
+			listaBonus[23].lanzado = true;
+			idBonus = 23;
+			generarBonus();
+		}
+	}
+
+	if (listaBloques[1][4].estaActivo && (listaBloques[1][4].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[1][4].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[1][4].puntos[0][1] - 6.5 > centroYPelota) && (listaBloques[1][4].puntos[2][1] - 6.5 < centroYPelota))
+	{
+		listaBloques[1][4].vida -= 1;
+		listaBloques[1][4].vida == 0 ? listaBloques[1][4].estaActivo = false : listaBloques[1][4].estaActivo = true;
+
+		velXPelota = -velXPelota;
+		velYPelota = -velYPelota;
+
+		if (listaBonus.find(24) != listaBonus.end()){ 
+			listaBonus[24].lanzado = true;
+			idBonus = 24;
+			generarBonus();
+		}
+	}
+
+	if (listaBloques[1][5].estaActivo && (listaBloques[1][5].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[1][5].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[1][5].puntos[0][1] - 6.5 > centroYPelota) && (listaBloques[1][5].puntos[2][1] - 6.5 < centroYPelota))
+	{
+		listaBloques[1][5].vida -= 1;
+		listaBloques[1][5].vida == 0 ? listaBloques[1][5].estaActivo = false : listaBloques[1][5].estaActivo = true;
+
+		velXPelota = -velXPelota;
+		velYPelota = -velYPelota;
+
+		if (listaBonus.find(25) != listaBonus.end()){ 
+			listaBonus[25].lanzado = true;
+			idBonus = 25;
+			generarBonus();
+		}
+	}
+
+	if (listaBloques[1][6].estaActivo && (listaBloques[1][6].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[1][6].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[1][6].puntos[0][1] - 6.5 > centroYPelota) && (listaBloques[1][6].puntos[2][1] - 6.5 < centroYPelota))
+	{
+		listaBloques[1][6].vida -= 1;
+		listaBloques[1][6].vida == 0 ? listaBloques[1][6].estaActivo = false : listaBloques[1][6].estaActivo = true;
+
+		velXPelota = -velXPelota;
+		velYPelota = -velYPelota;
+
+		if (listaBonus.find(26) != listaBonus.end()){ 
+			listaBonus[26].lanzado = true;
+			idBonus = 26;
+			generarBonus();
+		}
+	}*/
+	/*------ FILA 3 ------ */
+	/*if (listaBloques[2][0].estaActivo && (listaBloques[2][0].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[2][0].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[2][0].puntos[0][1] - 5.8 > centroYPelota) && (listaBloques[2][0].puntos[2][1] - 5.8 < centroYPelota))
+	{
+		listaBloques[2][0].vida -= 1;
+		listaBloques[2][0].vida == 0 ? listaBloques[2][0].estaActivo = false : listaBloques[2][0].estaActivo = true;
+
+		velXPelota = -velXPelota;
+		velYPelota = -velYPelota;
+
+		if (listaBonus.find(30) != listaBonus.end()){ 
+			listaBonus[30].lanzado = true;
+			idBonus = 30;
+			generarBonus();
+		}
+	}
+
+	if (listaBloques[2][1].estaActivo && (listaBloques[2][1].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[2][1].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[2][1].puntos[0][1] - 5.8 > centroYPelota) && (listaBloques[2][1].puntos[2][1] - 5.8 < centroYPelota))
+	{
+		listaBloques[2][1].vida -= 1;
+		listaBloques[2][1].vida == 0 ? listaBloques[2][1].estaActivo = false : listaBloques[2][1].estaActivo = true;
+
+		velXPelota = -velXPelota;
+		velYPelota = -velYPelota;
+
+		if (listaBonus.find(31) != listaBonus.end()){ 
+			listaBonus[31].lanzado = true;
+			idBonus = 31;
+			generarBonus();
+		}
+	}
+
+	if (listaBloques[2][2].estaActivo && (listaBloques[2][2].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[2][2].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[2][2].puntos[0][1] - 5.8 > centroYPelota) && (listaBloques[2][2].puntos[2][1] - 5.8 < centroYPelota))
+	{
+		listaBloques[2][2].vida -= 1;
+		listaBloques[2][2].vida == 0 ? listaBloques[2][2].estaActivo = false : listaBloques[2][2].estaActivo = true;
+
+		velXPelota = -velXPelota;
+		velYPelota = -velYPelota;
+
+		if (listaBonus.find(32) != listaBonus.end()){ 
+			listaBonus[32].lanzado = true;
+			idBonus = 32;
+			generarBonus();
+		}
+	}
+
+	if (listaBloques[2][3].estaActivo && (listaBloques[2][3].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[2][3].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[2][3].puntos[0][1] - 5.8 > centroYPelota) && (listaBloques[2][3].puntos[2][1] - 5.8 < centroYPelota))
+	{
+		listaBloques[2][3].vida -= 1;
+		listaBloques[2][3].vida == 0 ? listaBloques[2][3].estaActivo = false : listaBloques[2][3].estaActivo = true;
+
+		velXPelota = -velXPelota;
+		velYPelota = -velYPelota;
+
+		if (listaBonus.find(33) != listaBonus.end()){ 
+			listaBonus[33].lanzado = true;
+			idBonus = 33;
+			generarBonus();
+		}
+	}
+
+	if (listaBloques[2][4].estaActivo && (listaBloques[2][4].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[2][4].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[2][4].puntos[0][1] - 5.8 > centroYPelota) && (listaBloques[2][4].puntos[2][1] - 5.8 < centroYPelota))
+	{
+		listaBloques[2][4].vida -= 1;
+		listaBloques[2][4].vida == 0 ? listaBloques[2][4].estaActivo = false : listaBloques[2][4].estaActivo = true;
+
+		velXPelota = -velXPelota;
+		velYPelota = -velYPelota;
+
+		if (listaBonus.find(34) != listaBonus.end()){ 
+			listaBonus[34].lanzado = true;
+			idBonus = 34;
+			generarBonus();
+		}
+	}
+
+	if (listaBloques[2][5].estaActivo && (listaBloques[2][5].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[2][5].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[2][5].puntos[0][1] - 5.8 > centroYPelota) && (listaBloques[2][5].puntos[2][1] - 5.8 < centroYPelota))
+	{
+		listaBloques[2][5].vida -= 1;
+		listaBloques[2][5].vida == 0 ? listaBloques[2][5].estaActivo = false : listaBloques[2][5].estaActivo = true;
+
+		velXPelota = -velXPelota;
+		velYPelota = -velYPelota;
+
+		if (listaBonus.find(35) != listaBonus.end()){ 
+			listaBonus[35].lanzado = true;
+			idBonus = 35;
+			generarBonus();
+		}
+	}
+
+	if (listaBloques[2][6].estaActivo && (listaBloques[2][6].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[2][6].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[2][6].puntos[0][1] - 5.8 > centroYPelota) && (listaBloques[2][6].puntos[2][1] - 5.8 < centroYPelota))
+	{
+		listaBloques[2][6].vida -= 1;
+		listaBloques[2][6].vida == 0 ? listaBloques[2][6].estaActivo = false : listaBloques[2][6].estaActivo = true;
+
+		velXPelota = -velXPelota;
+		velYPelota = -velYPelota;
+
+		if (listaBonus.find(36) != listaBonus.end()){ 
+			listaBonus[36].lanzado = true;
+			idBonus = 36;
+			generarBonus();
+		}
+	}*/
+	
+	/*------ FILA 4 ------ */
+	/*if (listaBloques[3][0].estaActivo && (listaBloques[3][0].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[3][0].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[3][0].puntos[0][1] - 5.2 > centroYPelota) && (listaBloques[3][0].puntos[2][1] - 5.2 < centroYPelota))
+	{
+		listaBloques[3][0].vida -= 1;
+		listaBloques[3][0].vida == 0 ? listaBloques[3][0].estaActivo = false : listaBloques[3][0].estaActivo = true;
+
+		velXPelota = -velXPelota;
+		velYPelota = -velYPelota;
+
+		if (listaBonus.find(40) != listaBonus.end()){ 
+			listaBonus[40].lanzado = true;
+			idBonus = 40;
+			generarBonus();
+		}
+	}
+
+	if (listaBloques[3][1].estaActivo && (listaBloques[3][1].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[3][1].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[3][1].puntos[0][1] - 5.2 > centroYPelota) && (listaBloques[3][1].puntos[2][1] - 5.2 < centroYPelota))
+	{
+		listaBloques[3][1].vida -= 1;
+		listaBloques[3][1].vida == 0 ? listaBloques[3][1].estaActivo = false : listaBloques[3][1].estaActivo = true;
+
+		velXPelota = -velXPelota;
+		velYPelota = -velYPelota;
+
+		if (listaBonus.find(41) != listaBonus.end()){ 
+			listaBonus[41].lanzado = true;
+			idBonus = 41;
+			generarBonus();
+		}
+	}
+
+	if (listaBloques[3][2].estaActivo && (listaBloques[3][2].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[3][2].puntos[3][0] + 0.1 > centroXPelota)
+		&& (listaBloques[3][2].puntos[0][1] - 5.2 > centroYPelota) && (listaBloques[3][2].puntos[2][1] - 5.2 < centroYPelota))
+	{
+		listaBloques[3][2].vida -= 1;
+		listaBloques[3][2].vida == 0 ? listaBloques[3][2].estaActivo = false : listaBloques[3][2].estaActivo = true;
+
+		velXPelota = -velXPelota;
+		velYPelota = -velYPelota;
+
+		if (listaBonus.find(42) != listaBonus.end()){ 
+			listaBonus[42].lanzado = true;
+			idBonus = 42;
+			generarBonus();
+		}
+	}
+
+	if (listaBloques[3][3].estaActivo && (listaBloques[3][3].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[3][3].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[3][3].puntos[0][1] - 5.2 > centroYPelota) && (listaBloques[3][3].puntos[2][1] - 5.2 < centroYPelota))
+	{
+		listaBloques[3][3].vida -= 1;
+		listaBloques[3][3].vida == 0 ? listaBloques[3][3].estaActivo = false : listaBloques[3][3].estaActivo = true;
+
+		velXPelota = -velXPelota;
+		velYPelota = -velYPelota;
+
+		if (listaBonus.find(43) != listaBonus.end()){ 
+			listaBonus[43].lanzado = true;
+			idBonus = 43;
+			generarBonus();
+		}
+	}
+
+	if (listaBloques[3][4].estaActivo && (listaBloques[3][4].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[3][4].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[3][4].puntos[0][1] - 5.2 > centroYPelota) && (listaBloques[3][4].puntos[2][1] - 5.2 < centroYPelota))
+	{
+		listaBloques[3][4].vida -= 1;
+		listaBloques[3][4].vida == 0 ? listaBloques[3][4].estaActivo = false : listaBloques[3][4].estaActivo = true;
+
+		velXPelota = -velXPelota;
+		velYPelota = -velYPelota;
+
+		if (listaBonus.find(44) != listaBonus.end()){ 
+			listaBonus[44].lanzado = true;
+			idBonus = 45;
+			generarBonus();
+		}
+	}
+
+	if (listaBloques[3][5].estaActivo && (listaBloques[3][5].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[3][5].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[3][5].puntos[0][1] - 5.2 > centroYPelota) && (listaBloques[3][5].puntos[2][1] - 5.2 < centroYPelota))
+	{
+		listaBloques[3][5].vida -= 1;
+		listaBloques[3][5].vida == 0 ? listaBloques[3][5].estaActivo = false : listaBloques[3][5].estaActivo = true;
+
+		velXPelota = -velXPelota;
+		velYPelota = -velYPelota;
+
+		if (listaBonus.find(45) != listaBonus.end()){ 
+			listaBonus[45].lanzado = true;
+			idBonus = 45;
+			generarBonus();
+		}
+	}
+
+	if (listaBloques[3][6].estaActivo && (listaBloques[3][6].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[3][6].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[3][6].puntos[0][1] - 5.2 > centroYPelota) && (listaBloques[3][6].puntos[2][1] - 5.2 < centroYPelota))
+	{
+		listaBloques[3][6].vida -= 1;
+		listaBloques[3][6].vida == 0 ? listaBloques[3][6].estaActivo = false : listaBloques[3][6].estaActivo = true;
+
+		velXPelota = -velXPelota;
+		velYPelota = -velYPelota;
+
+		if (listaBonus.find(46) != listaBonus.end()){ 
+			listaBonus[46].lanzado = true;
+			idBonus = 46;
+			generarBonus();
+		}
+	}
+	*/
+	/*------ FILA 5 ------ */
+	/*if (listaBloques[4][0].estaActivo && (listaBloques[4][0].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[4][0].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[4][0].puntos[0][1] - 4.6 > centroYPelota) && (listaBloques[4][0].puntos[2][1] - 4.6 < centroYPelota))
+	{
+		listaBloques[4][0].vida -= 1;
+		listaBloques[4][0].vida == 0 ? listaBloques[4][0].estaActivo = false : listaBloques[4][0].estaActivo = true;
+
+		velXPelota = -velXPelota;
+		velYPelota = -velYPelota;
+
+		if (listaBonus.find(50) != listaBonus.end()){ 
+			listaBonus[50].lanzado = true;
+			idBonus = 50;
+			generarBonus();
+		}
+	}
+
+	if (listaBloques[4][1].estaActivo && (listaBloques[4][1].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[4][1].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[4][1].puntos[0][1] - 4.6 > centroYPelota) && (listaBloques[4][1].puntos[2][1] - 4.6 < centroYPelota))
+	{
+		listaBloques[4][1].vida -= 1;
+		listaBloques[4][1].vida == 0 ? listaBloques[4][1].estaActivo = false : listaBloques[4][1].estaActivo = true;
+
+		velXPelota = -velXPelota;
+		velYPelota = -velYPelota;
+
+		if (listaBonus.find(51) != listaBonus.end()){ 
+			listaBonus[51].lanzado = true;
+			idBonus = 51;
+			generarBonus();
+		}
+	}
+
+	if (listaBloques[4][2].estaActivo && (listaBloques[4][2].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[4][2].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[4][2].puntos[0][1] - 4.6 > centroYPelota) && (listaBloques[4][2].puntos[2][1] - 4.6 < centroYPelota))
+	{
+		listaBloques[4][2].vida -= 1;
+		listaBloques[4][2].vida == 0 ? listaBloques[4][2].estaActivo = false : listaBloques[4][2].estaActivo = true;
+
+		velXPelota = -velXPelota;
+		velYPelota = -velYPelota;
+
+		if (listaBonus.find(52) != listaBonus.end()){ 
+			listaBonus[52].lanzado = true;
+			idBonus = 52;
+			generarBonus();
+		}
+	}
+
+	if ((listaBloques[4][3].estaActivo) && (listaBloques[4][3].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[4][3].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[4][3].puntos[0][1] - 4.6 > centroYPelota) && (listaBloques[4][3].puntos[2][1] - 4.6 < centroYPelota))
+	{
+		listaBloques[4][3].vida -= 1;
+		listaBloques[4][3].vida == 0 ? listaBloques[4][3].estaActivo = false : listaBloques[4][3].estaActivo = true;
+
+		velXPelota = -velXPelota;
+		velYPelota = -velYPelota;
+
+		if (listaBonus.find(53) != listaBonus.end()){ 
+			listaBonus[53].lanzado = true;
+			idBonus = 53;
+			generarBonus();
+		}
+	}
+
+	if (listaBloques[4][4].estaActivo && (listaBloques[4][4].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[4][4].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[4][4].puntos[0][1] - 4.6 > centroYPelota) && (listaBloques[4][4].puntos[2][1] - 4.6 < centroYPelota))
+	{
+		listaBloques[4][4].vida -= 1;
+		listaBloques[4][4].vida == 0 ? listaBloques[4][4].estaActivo = false : listaBloques[4][4].estaActivo = true;
+
+		velXPelota = -velXPelota;
+		velYPelota = -velYPelota;
+
+		if (listaBonus.find(54) != listaBonus.end()){ 
+			listaBonus[54].lanzado = true;
+			idBonus = 54;
+			generarBonus();
+		}
+	}
+
+	if (listaBloques[4][5].estaActivo && (listaBloques[4][5].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[4][5].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[4][5].puntos[0][1] - 4.6 > centroYPelota) && (listaBloques[4][5].puntos[2][1] - 4.6 < centroYPelota))
+	{
+		listaBloques[4][5].vida -= 1;
+		listaBloques[4][5].vida == 0 ? listaBloques[4][5].estaActivo = false : listaBloques[4][5].estaActivo = true;
+
+		velXPelota = -velXPelota;
+		velYPelota = -velYPelota;
+
+		if (listaBonus.find(55) != listaBonus.end()){ 
+			listaBonus[55].lanzado = true;
+			idBonus = 55;
+			generarBonus();
+		}
+	}
+
+	if (listaBloques[4][6].estaActivo && (listaBloques[4][6].puntos[0][0] - 0.1 < centroXPelota) && (listaBloques[4][6].puntos[3][0] + 0.2 > centroXPelota)
+		&& (listaBloques[4][6].puntos[0][1] - 4.6 > centroYPelota) && (listaBloques[4][6].puntos[2][1] - 4.6 < centroYPelota))
+	{
+		listaBloques[4][6].vida -= 1;
+		listaBloques[4][6].vida == 0 ? listaBloques[4][6].estaActivo = false : listaBloques[4][6].estaActivo = true;
+
+		velXPelota = -velXPelota;
+		velYPelota = -velYPelota;
+
+		if (listaBonus.find(56) != listaBonus.end()){ 
+			listaBonus[56].lanzado = true;
+			idBonus = 56;
+			generarBonus();
+		}
+	}
+	*/
+
+	/*if (listaBonus[idBonus].centroYBonus == posYIniPlat)
+	{
+		if (true) // en centro en x esta en la plataforma
+		{
+			listaBonus[idBonus].agarrado = true;
+			if (listaBonus[idBonus].tipo == 0)
+			{
+				printf("entre");
+				velXPelota = velXPelota*aumentVel;
+				velYPelota = velYPelota*aumentVel;	
+			}
+			else if (listaBonus[idBonus].tipo == 1)
+			{
+				largoXPlat = largoXPlat*disminTam;	
+			}
+		}
+	}*/
+
 }
 
 /*
@@ -753,17 +1246,6 @@ void actualizacionBloques(void){
 }
 
 /*
-		Para general el bonus al colisionar con un bloque con bonus, en el if de la colision con el bloque, se agrega generarBonus
-		con coordX y coordY iguales a las coordenadas del centro del bloque y se agrega lo siguiente:
-			actualizar centro del bonus += velBonus
-			verificar colision con la plataforma, cambiando agarrado por true(si colisiona) y drestruir el bonus
-			en caso de agarrarlo:
-				si es de tipo 1 --> velXpelota = velXPelota*aumentVel
-									velYpelota = velYPelota*aumentVel
-				si es de tipo 2 --> largoXPlat = largoXPlat*disminTam
-	*/
-
-/*
 	Descripción:
 		permite crear el bonus
 */
@@ -805,10 +1287,10 @@ void dibujarBonus(int id, float tam)
 
 void generarBonus(void)
 {
-	glNewList(glBonus, GL_COMPILE);
+	glNewList(listaBonus[idBonus].id + 60, GL_COMPILE);
 		glPushMatrix();
 			glColor3f(0.93, 0.0, 0.93);
-			//dibujarBonus(bonus[0].centroXBonus,bonus[0].centroYBonus,tamBonus,1,0); //--------------------------arreglar
+			dibujarBonus(idBonus, tamBonus);
 		glPopMatrix();
 	glEndList();
 }
@@ -825,7 +1307,7 @@ void compilarJuego(void)
 	generarParedSup();
 	generarPlataforma();
 	generarPelota();
-	//generarBonus();
+	generarBonus();
 	actualizacionBloques();
 }
 
@@ -872,9 +1354,68 @@ void ejecutarJuego(void)
 	glPopMatrix();
 
 	glPushMatrix();
-		glCallList(glBonus);
-	glPopMatrix();
+		if (listaBonus.find(10) != listaBonus.end() && listaBonus[10].lanzado){ 
+			glCallList(60 + listaBonus[10].id);
+			listaBonus[10].centroYBonus += velBonus;
+		};
+		if (listaBonus.find(11) != listaBonus.end() && listaBonus[11].lanzado){ 
+			glCallList(60 + listaBonus[11].id);
+			listaBonus[11].centroYBonus += velBonus;
+		};
+		if (listaBonus.find(12) != listaBonus.end() && listaBonus[12].lanzado){ 
+			glCallList(60 + listaBonus[12].id);
+			listaBonus[12].centroYBonus += velBonus;
+		};
+		if (listaBonus.find(13) != listaBonus.end() && listaBonus[13].lanzado){ 
+			glCallList(60 + listaBonus[13].id);
+			listaBonus[13].centroYBonus += velBonus;
+		};
+		if (listaBonus.find(14) != listaBonus.end() && listaBonus[14].lanzado){ 
+			glCallList(60 + listaBonus[14].id);
+			listaBonus[14].centroYBonus += velBonus;
+		};
+		if (listaBonus.find(15) != listaBonus.end() && listaBonus[15].lanzado){ 
+			glCallList(60 + listaBonus[15].id);
+			listaBonus[15].centroYBonus += velBonus;
+		};
+		if (listaBonus.find(16) != listaBonus.end() && listaBonus[16].lanzado){ 
+			glCallList(60 + listaBonus[16].id);
+			listaBonus[16].centroYBonus += velBonus;
+		};
+		/*
+		if (listaBonus.find(20) != listaBonus.end() && listaBonus[20].lanzado) glCallList(60 + listaBonus[20].id);
+		if (listaBonus.find(21) != listaBonus.end() && listaBonus[21].lanzado) glCallList(60 + listaBonus[21].id);
+		if (listaBonus.find(22) != listaBonus.end() && listaBonus[22].lanzado) glCallList(60 + listaBonus[22].id);
+		if (listaBonus.find(23) != listaBonus.end() && listaBonus[23].lanzado) glCallList(60 + listaBonus[23].id);
+		if (listaBonus.find(24) != listaBonus.end() && listaBonus[24].lanzado) glCallList(60 + listaBonus[24].id);
+		if (listaBonus.find(25) != listaBonus.end() && listaBonus[25].lanzado) glCallList(60 + listaBonus[25].id);
+		if (listaBonus.find(26) != listaBonus.end() && listaBonus[26].lanzado) glCallList(60 + listaBonus[26].id);
 
+		if (listaBonus.find(30) != listaBonus.end() && listaBonus[30].lanzado) glCallList(60 + listaBonus[30].id);
+		if (listaBonus.find(31) != listaBonus.end() && listaBonus[31].lanzado) glCallList(60 + listaBonus[31].id);
+		if (listaBonus.find(32) != listaBonus.end() && listaBonus[32].lanzado) glCallList(60 + listaBonus[32].id);
+		if (listaBonus.find(33) != listaBonus.end() && listaBonus[33].lanzado) glCallList(60 + listaBonus[33].id);
+		if (listaBonus.find(34) != listaBonus.end() && listaBonus[34].lanzado) glCallList(60 + listaBonus[34].id);
+		if (listaBonus.find(35) != listaBonus.end() && listaBonus[35].lanzado) glCallList(60 + listaBonus[35].id);
+		if (listaBonus.find(36) != listaBonus.end() && listaBonus[36].lanzado) glCallList(60 + listaBonus[36].id);
+
+		if (listaBonus.find(40) != listaBonus.end() && listaBonus[40].lanzado) glCallList(60 + listaBonus[40].id);
+		if (listaBonus.find(41) != listaBonus.end() && listaBonus[41].lanzado) glCallList(60 + listaBonus[41].id);
+		if (listaBonus.find(42) != listaBonus.end() && listaBonus[42].lanzado) glCallList(60 + listaBonus[42].id);
+		if (listaBonus.find(43) != listaBonus.end() && listaBonus[43].lanzado) glCallList(60 + listaBonus[43].id);
+		if (listaBonus.find(44) != listaBonus.end() && listaBonus[44].lanzado) glCallList(60 + listaBonus[44].id);
+		if (listaBonus.find(45) != listaBonus.end() && listaBonus[45].lanzado) glCallList(60 + listaBonus[45].id);
+		if (listaBonus.find(46) != listaBonus.end() && listaBonus[46].lanzado) glCallList(60 + listaBonus[46].id);
+
+		if (listaBonus.find(50) != listaBonus.end() && listaBonus[50].lanzado) glCallList(60 + listaBonus[50].id);
+		if (listaBonus.find(51) != listaBonus.end() && listaBonus[51].lanzado) glCallList(60 + listaBonus[51].id);
+		if (listaBonus.find(52) != listaBonus.end() && listaBonus[52].lanzado) glCallList(60 + listaBonus[52].id);
+		if (listaBonus.find(53) != listaBonus.end() && listaBonus[53].lanzado) glCallList(60 + listaBonus[53].id);
+		if (listaBonus.find(54) != listaBonus.end() && listaBonus[54].lanzado) glCallList(60 + listaBonus[54].id);
+		if (listaBonus.find(55) != listaBonus.end() && listaBonus[55].lanzado) glCallList(60 + listaBonus[55].id);
+		if (listaBonus.find(56) != listaBonus.end() && listaBonus[56].lanzado) glCallList(60 + listaBonus[56].id);
+		*/
+	glPopMatrix();
 }
 
 void changeViewport(int w, int h) {
